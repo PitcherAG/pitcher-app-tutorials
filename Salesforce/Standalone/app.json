@@ -1,0 +1,9 @@
+{
+  "name": "salesforce-hello-world",
+  "type": "web",
+  "version": "0.0.61",
+  "description": "Salesforce Hello World",
+  "displayName": "Salesforce Hello World",
+  "icon": "far fa-wrench",
+  "display_name": "Salesforce Hello World"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "entities-standalone",
+  "type": "web",
+  "version": "0.0.21",
+  "description": "Entities Standalone",
+  "displayName": "Entities Standalone",
+  "provide": [
+    "yacht",
+    "ui:menu"
+  ],
+  "icon": "fas fa-music",
+  "display_name": "Entities Standalone"
+}
