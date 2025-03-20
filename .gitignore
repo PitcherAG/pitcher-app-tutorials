@@ -2,3 +2,5 @@
 **/.DS_Store
 *.zip
 **/*.zip
+
+/node_modules

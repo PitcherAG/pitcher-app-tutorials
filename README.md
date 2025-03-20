@@ -35,6 +35,7 @@ Examples showing how to integrate with Salesforce:
 ## Project Structure
 
 Each example includes:
+
 - `app.json`: Configuration file for the application
 - `dist/`: Distribution folder containing the built application
   - `index.html`: Main entry point for the application
@@ -42,8 +43,6 @@ Each example includes:
   - `README.md`: Example-specific documentation
 
 ## Development Guide
-
-For detailed development instructions, coding standards, and best practices, see the main [CLAUDE.md](../CLAUDE.md) file in the parent directory.
 
 **Important:** Developers should change the app identifier (name) field in the `app.json` file before publishing their applications.
 
@@ -54,14 +53,17 @@ For detailed development instructions, coding standards, and best practices, see
 You can easily publish your Pitcher apps using the `@pitcher/cli-scripts` package. This tool simplifies the process of building, validating, and publishing your applications.
 
 1. Install the CLI tool:
+
    ```bash
    npm install -g @pitcher/cli-scripts
    ```
+
    This installs the `pit` command line tool.
 
 2. Navigate to your app directory (containing app.json)
 
 3. Publish your app:
+
    ```bash
    pit app publish
    ```
@@ -77,6 +79,7 @@ You can easily publish your Pitcher apps using the `@pitcher/cli-scripts` packag
    - Or your custom organization subdomain
 
 The CLI offers several helpful commands:
+
 - `pit app validate` - Check if your app meets all requirements
 - `pit app build` - Build your app for production
 - `pit app deploy` - Deploy your app to a specific environment

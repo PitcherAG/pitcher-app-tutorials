@@ -1,0 +1,11 @@
+{
+  "name": "pitcher-app-tutorials",
+  "version": "1.0.0",
+  "scripts": {
+    "publish": "pit app publish",
+    "publish:dev": "pit app publish --api-url https://dev.my.pitcher.com/api/v1"
+  },
+  "devDependencies": {
+    "@pitcher/cli-scripts": "^1.0.0"
+  }
+}
