@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "publish": "pit app publish",
-    "publish:dev": "pit app publish --api-url https://dev.my.pitcher.com/api/v1"
+    "publish:url": "pit app publish --api-url ENTER_PUBLISH_API_URL"
   },
   "devDependencies": {
     "@pitcher/cli-scripts": "^1.0.0"
