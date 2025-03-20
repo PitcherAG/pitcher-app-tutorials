@@ -88,6 +88,24 @@ The CLI offers several helpful commands:
 For detailed information about all available commands and options, visit:
 [Pitcher CLI Documentation](https://www.npmjs.com/package/@pitcher/cli-scripts)
 
+### Using npm Scripts
+
+This project includes npm scripts to simplify publishing:
+
+1. Publish your app without specifying an API URL:
+
+   ```bash
+   npm run publish
+   ```
+
+2. Publish your app with a custom API URL (replace the placeholder with your API URL):
+
+   ```bash
+   npm run publish:url
+   ```
+
+   Note: You'll need to edit the `package.json` file and replace `ENTER_PUBLISH_API_URL` with your actual API URL.
+
 ## Additional Resources
 
 - [Pitcher Developer Portal](https://developer.pitcher.com)
