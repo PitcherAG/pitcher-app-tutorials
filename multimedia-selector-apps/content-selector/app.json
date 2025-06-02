@@ -1,0 +1,20 @@
+{
+  "name": "content-selector-app",
+  "displayName": "Multimedia selector app",
+  "description": "An app for selecting content for canvas multimedia components",
+  "version": "1.0.0",
+  "type": "web",
+  "provide": [
+    "multimedia_selector"
+  ],
+  "icon": "far fa-clipboard-check",
+  "display_name": "DAM Selector",
+  "app_type": "multimedia-selector",
+  "app_options": {
+    "dimensions": {
+      "width": 900,
+      "height": 600
+    },
+    "placement": "center"
+  }
+}
