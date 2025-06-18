@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Salesforce Data Checker</title>
+    <!-- Include Pitcher API first -->
+    <script src="https://player.pitcher.com/api/NG/js-api.php"></script>
+    <!-- Include jsforce -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsforce/1.9.3/jsforce.min.js"></script>
+    <!-- Include our API module -->
+    <script src="js/api.js"></script>
+    
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .connection-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+      .connection-status.connected {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+      .connection-status.disconnected {
+        background-color: #ffebee;
+        color: #c62828;
+      }
+      .connection-status.connecting {
+        background-color: #e3f2fd;
+        color: #1976d2;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+      }
+      input, textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      }
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      button {
+        background-color: #1976d2;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #1565c0;
+      }
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+      .error {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border-left: 4px solid #f44336;
+      }
+      .success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border-left: 4px solid #4caf50;
+      }
+      .info {
+        background-color: #e3f2fd;
+        color: #1565c0;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border-left: 4px solid #2196f3;
+      }
+      .results-container {
+        margin-top: 30px;
+      }
+      .result-card {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border-left: 4px solid #1976d2;
+      }
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .result-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+      .result-count {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 14px;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+      .loading.active {
+        display: block;
+      }
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #1976d2;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      pre {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        font-size: 14px;
+        border: 1px solid #e0e0e0;
+      }
+      .table-container {
+        overflow-x: auto;
+        margin-top: 15px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+        color: #333;
+        position: sticky;
+        top: 0;
+      }
+      tr:hover {
+        background-color: #f9f9f9;
+      }
+      .query-examples {
+        background-color: #f0f7ff;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+      .query-example {
+        margin: 5px 0;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 13px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="margin: 0;">Salesforce Data Checker</h1>
+        <div style="text-align: right;">
+          <div class="connection-status disconnected" id="connectionStatus">
+            <span id="statusText">Not Connected</span>
+          </div>
+          <div id="userInfo" style="margin-top: 8px; font-size: 14px; color: #666; display: none;">
+            <div style="font-weight: 600;" id="userName"></div>
+            <div style="font-size: 12px;" id="userEmail"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="query-examples">
+        <h4 style="margin-top: 0;">Example SOQL Queries:</h4>
+        <div class="query-example">• SELECT Id, Name, Email FROM User LIMIT 10</div>
+        <div class="query-example">• SELECT Id, Name, Type, Industry FROM Account WHERE Type = 'Customer' LIMIT 20</div>
+        <div class="query-example">• SELECT Id, Subject, Status FROM Case WHERE Status != 'Closed' LIMIT 50</div>
+        <div class="query-example">• SELECT COUNT() FROM Contact</div>
+        <div class="query-example" style="margin-top: 10px; font-weight: bold;">Update Example (using console):</div>
+        <div class="query-example">• await API.updateRecord('Account', '001XX000003DHPh', {Name: 'Updated Account Name', Type: 'Partner'})</div>
+      </div>
+
+      <form id="queryForm">
+        <div class="form-group">
+          <label for="soqlQuery">SOQL Query:</label>
+          <textarea id="soqlQuery" placeholder="Enter your SOQL query here...">SELECT Id, Name, Email FROM User LIMIT 10</textarea>
+        </div>
+
+        <div>
+          <button type="submit" id="executeBtn">Execute Query</button>
+          <button type="button" id="clearBtn">Clear Results</button>
+        </div>
+      </form>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px; color: #666;">Executing query...</p>
+      </div>
+
+      <div id="message"></div>
+
+      <div id="results" class="results-container"></div>
+    </div>
+
+    <script>
+      // Utility functions
+      function getElement(id) {
+        return document.getElementById(id);
+      }
+
+      function updateConnectionStatus(status, text) {
+        const statusElement = getElement('connectionStatus');
+        const statusText = getElement('statusText');
+        
+        statusElement.className = `connection-status ${status}`;
+        statusText.textContent = text;
+      }
+
+      function showMessage(message, type = 'info') {
+        const messageDiv = getElement('message');
+        messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+          setTimeout(() => {
+            messageDiv.innerHTML = '';
+          }, 5000);
+        }
+      }
+
+      function showLoading(isLoading) {
+        const loadingDiv = getElement('loading');
+        const executeBtn = getElement('executeBtn');
+        
+        loadingDiv.className = isLoading ? 'loading active' : 'loading';
+        executeBtn.disabled = isLoading;
+      }
+
+      function clearResults() {
+        getElement('message').innerHTML = '';
+        getElement('results').innerHTML = '';
+      }
+
+      function formatValue(value) {
+        if (value === null || value === undefined) return '<em>null</em>';
+        if (typeof value === 'object') return JSON.stringify(value);
+        return value;
+      }
+
+      function renderResults(data) {
+        const resultsDiv = getElement('results');
+        
+        if (!data || !data.records || data.records.length === 0) {
+          resultsDiv.innerHTML = '<div class="info">No records found.</div>';
+          return;
+        }
+
+        // Create result card
+        const resultCard = document.createElement('div');
+        resultCard.className = 'result-card';
+        
+        // Header
+        const header = document.createElement('div');
+        header.className = 'result-header';
+        header.innerHTML = `
+          <div class="result-title">Query Results</div>
+          <div class="result-count">${data.records.length} record${data.records.length !== 1 ? 's' : ''}</div>
+        `;
+        resultCard.appendChild(header);
+
+        // If it's a COUNT query
+        if (data.records.length === 1 && data.records[0].expr0 !== undefined) {
+          const countDiv = document.createElement('div');
+          countDiv.style.fontSize = '24px';
+          countDiv.style.fontWeight = 'bold';
+          countDiv.style.textAlign = 'center';
+          countDiv.style.padding = '20px';
+          countDiv.textContent = `Count: ${data.records[0].expr0}`;
+          resultCard.appendChild(countDiv);
+        } else {
+          // Create table
+          const tableContainer = document.createElement('div');
+          tableContainer.className = 'table-container';
+          
+          const table = document.createElement('table');
+          
+          // Get all unique keys from records
+          const allKeys = new Set();
+          data.records.forEach(record => {
+            Object.keys(record).forEach(key => allKeys.add(key));
+          });
+          const keys = Array.from(allKeys).sort();
+          
+          // Create header
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+          keys.forEach(key => {
+            const th = document.createElement('th');
+            th.textContent = key;
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+          
+          // Create body
+          const tbody = document.createElement('tbody');
+          data.records.forEach(record => {
+            const row = document.createElement('tr');
+            keys.forEach(key => {
+              const td = document.createElement('td');
+              td.innerHTML = formatValue(record[key]);
+              row.appendChild(td);
+            });
+            tbody.appendChild(row);
+          });
+          table.appendChild(tbody);
+          
+          tableContainer.appendChild(table);
+          resultCard.appendChild(tableContainer);
+        }
+
+        // Add raw data toggle
+        const detailsElement = document.createElement('details');
+        detailsElement.style.marginTop = '20px';
+        detailsElement.innerHTML = `
+          <summary style="cursor: pointer; font-weight: bold;">View Raw JSON</summary>
+          <pre style="margin-top: 10px;">${JSON.stringify(data.records, null, 2)}</pre>
+        `;
+        resultCard.appendChild(detailsElement);
+
+        resultsDiv.innerHTML = '';
+        resultsDiv.appendChild(resultCard);
+      }
+
+      async function executeQuery() {
+        const soqlQuery = getElement('soqlQuery').value.trim();
+        
+        if (!soqlQuery) {
+          showMessage('Please enter a SOQL query', 'error');
+          return;
+        }
+
+        try {
+          showLoading(true);
+          clearResults();
+          
+          const result = await API.executeQuery(soqlQuery);
+          
+          showMessage('Query executed successfully!', 'success');
+          renderResults(result);
+        } catch (error) {
+          console.error('Error executing query:', error);
+          showMessage(`Error: ${error.message || error}`, 'error');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      async function initializeApp() {
+        try {
+          updateConnectionStatus('connecting', 'Connecting...');
+          
+          const connected = await API.initialize();
+          
+          if (connected) {
+            updateConnectionStatus('connected', 'Connected to Salesforce');
+            showMessage('Successfully connected to Salesforce!', 'success');
+            
+            // Get and display user info
+            const userInfo = API.getUserInfo();
+            if (userInfo) {
+              console.log('Connected as:', userInfo.display_name);
+              
+              // Display user info in UI
+              const userInfoDiv = getElement('userInfo');
+              const userName = getElement('userName');
+              const userEmail = getElement('userEmail');
+              
+              userName.textContent = userInfo.display_name;
+              userEmail.textContent = `${userInfo.email} (${userInfo.organization})`;
+              userInfoDiv.style.display = 'block';
+            }
+          } else {
+            updateConnectionStatus('disconnected', 'Not Connected');
+            showMessage('Failed to connect to Salesforce. Please ensure you have a Salesforce service connected in Pitcher.', 'error');
+            getElement('userInfo').style.display = 'none';
+          }
+        } catch (error) {
+          console.error('Initialization error:', error);
+          updateConnectionStatus('disconnected', 'Connection Failed');
+          showMessage(`Initialization error: ${error.message}`, 'error');
+          getElement('userInfo').style.display = 'none';
+        }
+      }
+
+      // Event handlers
+      function handleFormSubmit(event) {
+        event.preventDefault();
+        if (API.isConnected()) {
+          executeQuery();
+        } else {
+          showMessage('Not connected to Salesforce. Please refresh the page.', 'error');
+        }
+      }
+
+      function handleClearResults() {
+        clearResults();
+        getElement('soqlQuery').value = '';
+      }
+
+      // Initialize event listeners
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = getElement('queryForm');
+        const clearBtn = getElement('clearBtn');
+        
+        form.addEventListener('submit', handleFormSubmit);
+        clearBtn.addEventListener('click', handleClearResults);
+        
+        // Initialize the app
+        initializeApp();
+      });
+    </script>
+  </body>
+</html>

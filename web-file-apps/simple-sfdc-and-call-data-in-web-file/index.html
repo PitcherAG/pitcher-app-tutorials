@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Salesforce Data Checker - Main</title>
+    <!-- Include Pitcher API first -->
+    <script src="https://player.pitcher.com/api/NG/js-api.php"></script>
+    <!-- Include jsforce -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsforce/1.9.3/jsforce.min.js"></script>
+
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial,
+          sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .navigation {
+        background: #1976d2;
+        color: white;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        margin-left: 20px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+      .nav-links a:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      .nav-links a.active {
+        background-color: rgba(255, 255, 255, 0.3);
+        font-weight: bold;
+      }
+      .data-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .data-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #dee2e6;
+      }
+      .user-name {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1976d2;
+        margin: 10px 0;
+      }
+      .account-name {
+        font-size: 20px;
+        color: #2e7d32;
+        margin: 10px 0;
+      }
+      .info {
+        background-color: #e3f2fd;
+        color: #1565c0;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .error {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      button {
+        background-color: #1976d2;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px 10px 10px 0;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #1565c0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="navigation">
+        <h2 style="margin: 0">Salesforce Data Checker</h2>
+        <div class="nav-links">
+          <a href="index.html" class="active">Main Page</a>
+          <a href="page2.html">Secondary Page</a>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 30px">
+        <h1 style="margin: 0">Page One - Main Dashboard</h1>
+      </div>
+
+      <!-- User Data Section -->
+      <div class="data-section">
+        <div class="data-title">Salesforce User Information</div>
+        <div id="userDataDisplay">
+          <div class="info">Loading user data...</div>
+        </div>
+      </div>
+
+      <!-- Call Data Section -->
+      <div class="data-section">
+        <div class="data-title">Call Data Information</div>
+        <div id="callDataDisplay">
+          <div class="info">Loading call data...</div>
+        </div>
+      </div>
+
+      <div>
+        <button onclick="navigateToPage2()">Go to Page 2</button>
+        <button onclick="refreshData()">Refresh Data</button>
+      </div>
+
+      <div id="message"></div>
+    </div>
+
+    <script>
+      // Global variables
+      let userData = null;
+      let callData = null;
+      let pageStartTime = Date.now();
+      let pitcherApi = null;
+      let env = null;
+
+      // Initialize API
+      const API = (() => {
+        let authToken = "";
+        let sfConn = null;
+        let sfdcToken = "";
+        let sfdcDomain = "";
+
+        const initialize = async () => {
+          try {
+            pitcherApi = pitcher.useApi();
+            env = await pitcherApi.getEnv();
+
+            if (env && env.pitcher && env.pitcher.access_token) {
+              authToken = env.pitcher.access_token;
+
+              const connectedServices = env.pitcher.user.connected_services;
+              if (connectedServices && connectedServices.length > 0) {
+                const sfdc = connectedServices.find(
+                  (service) =>
+                    service.type === "crm" && service.provider === "salesforce",
+                );
+
+                if (sfdc) {
+                  sfdcDomain = sfdc?.urls?.custom_domain;
+                  sfdcToken = sfdc?.access_token;
+
+                  if (sfdcToken && sfdcDomain) {
+                    sfConn = new jsforce.Connection({
+                      instanceUrl: sfdcDomain,
+                      accessToken: sfdcToken,
+                      version: "57.0",
+                    });
+                    return true;
+                  }
+                }
+              }
+              return false;
+            } else {
+              return false;
+            }
+          } catch (error) {
+            console.error("Error initializing API:", error);
+            return false;
+          }
+        };
+
+        const getEnv = () => env;
+        const getSalesforceConnection = () => sfConn;
+        const isConnected = () => sfConn !== null;
+
+        return {
+          initialize,
+          getEnv,
+          getSalesforceConnection,
+          isConnected,
+        };
+      })();
+
+      function showMessage(message, type = "info") {
+        const messageDiv = document.getElementById("message");
+        messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+
+        if (type === "success") {
+          setTimeout(() => {
+            messageDiv.innerHTML = "";
+          }, 3000);
+        }
+      }
+
+      function displayUserData() {
+        const userDataDiv = document.getElementById("userDataDisplay");
+
+        if (userData && userData.pitcher && userData.pitcher.user) {
+          const user = userData.pitcher.user;
+          const sfService = user.connected_services?.find(
+            (service) =>
+              service.type === "crm" && service.provider === "salesforce",
+          );
+
+          const displayName =
+            user.first_name && user.last_name
+              ? `${user.first_name} ${user.last_name}`
+              : user.email;
+
+          userDataDiv.innerHTML = `
+            <div class="user-name">👤 ${displayName}</div>
+            <div>Email: ${user.email}</div>
+            <div>Organization: ${sfService?.organization_name || "Salesforce"}</div>
+            ${sfService?.username ? `<div>SF Username: ${sfService.username}</div>` : ""}
+          `;
+        } else {
+          userDataDiv.innerHTML =
+            '<div class="error">No user data available</div>';
+        }
+      }
+
+      function displayCallData() {
+        const callDataDiv = document.getElementById("callDataDisplay");
+
+        if (
+          callData &&
+          callData.selectedAccount &&
+          callData.selectedAccount.Name
+        ) {
+          callDataDiv.innerHTML = `
+            <div class="account-name">🏢 Selected Account: ${callData.selectedAccount.Name}</div>
+            <div>Call State: ${callData.callState || "Unknown"}</div>
+            ${callData.selectedContacts ? `<div>Selected Contacts: ${callData.selectedContacts.length}</div>` : ""}
+            ${callData.selectedUsers ? `<div>Selected Users: ${callData.selectedUsers.length}</div>` : ""}
+          `;
+        } else if (callData && callData.callState) {
+          callDataDiv.innerHTML = `
+            <div>Call State: ${callData.callState}</div>
+          `;
+        } else {
+          callDataDiv.innerHTML = '<div class="info">Not in a call</div>';
+        }
+      }
+
+      function loadCallData() {
+        try {
+          const storedCallData = localStorage.getItem("call");
+          if (storedCallData) {
+            callData = JSON.parse(storedCallData);
+          } else {
+            callData = null;
+          }
+        } catch (error) {
+          console.error("Error loading call data from localStorage:", error);
+          callData = null;
+        }
+        displayCallData();
+      }
+
+      async function loadUserData() {
+        try {
+          const env = await API.getEnv();
+          if (env) {
+            userData = {
+              pitcher: env.pitcher,
+              timestamp: new Date().toISOString(),
+            };
+          }
+        } catch (error) {
+          console.error("Error loading user data:", error);
+          userData = null;
+        }
+        displayUserData();
+      }
+
+      async function refreshData() {
+        showMessage("Refreshing data...", "info");
+        await loadUserData();
+        loadCallData();
+        showMessage("Data refreshed successfully!", "success");
+      }
+
+      function navigateToPage2() {
+        const duration = Date.now() - pageStartTime;
+        const durationInSeconds = Math.floor(duration / 1000);
+
+        // Navigate to page 2
+        window.location.href = "page2.html";
+      }
+
+      async function initializeApp() {
+        try {
+          showMessage("Initializing application...", "info");
+
+          const connected = await API.initialize();
+
+          if (connected) {
+            showMessage("Connected to Salesforce successfully!", "success");
+          } else {
+            showMessage("Salesforce connection not available", "error");
+          }
+
+          await loadUserData();
+          loadCallData();
+        } catch (error) {
+          console.error("Initialization error:", error);
+          showMessage(`Initialization error: ${error.message}`, "error");
+        }
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeApp();
+      });
+
+      // Simple periodic tracking every 10 seconds
+      setInterval(function () {
+        const duration = Date.now() - pageStartTime;
+        const durationInSeconds = Math.floor(duration / 1000);
+
+        window.pitcher
+          .useApi()
+          .track({
+            event_name: "SimpleDataDisplayPage1Track",
+            payload: {
+              duration: durationInSeconds,
+              page: "index.html",
+              timestamp: new Date().toISOString(),
+              client: env?.client_type,
+            },
+          })
+          .catch(console.error);
+      }, 10000);
+
+      // Make variables available globally
+      window.userData = userData;
+      window.callData = callData;
+    </script>
+  </body>
+</html>
