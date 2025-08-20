@@ -1,0 +1,27 @@
+{
+  "name": "hello-world-canvas",
+  "type": "web",
+  "version": "0.0.11",
+  "description": "Hello World Canvas",
+  "displayName": "Hello World Canvas",
+  "provide": [
+    "ui:menu"
+  ],
+  "icon": "fas fa-music",
+  "display_name": "Hello World Canvas",
+  "module": {
+    "dsr": {
+      "enabled": true
+    },
+    "canvas": {
+      "enabled": true,
+      "auto_install": false,
+      "defaults": {
+        "dimensions": {
+          "width": "100%",
+          "height": "1000px"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Selector App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://player.pitcher.com/api/NG/js-api.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .list-view .asset-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .folder-tree ul {
+      margin-left: 1rem;
+    }
+
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100">
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="flex items-center justify-between p-4">
+      <div class="flex items-center space-x-4">
+        <h1 class="text-xl font-semibold text-gray-800">DAM</h1>
+        <div class="relative">
+          <input type="text" id="searchInput" placeholder="Search assets..."
+            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 w-96">
+          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button id="multiSelectToggle" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 hidden">
+          <i class="fas fa-check-square mr-2"></i>Multi-select
+        </button>
+        <button id="viewToggle" class="px-3 py-2 text-gray-600 hover:text-gray-800">
+          <i class="fas fa-th-large"></i>
+          <i class="fas fa-list ml-2"></i>
+        </button>
+        <button id="filterToggle" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+          <i class="fas fa-filter mr-2"></i>Filters
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex h-screen">
+    <!-- Sidebar with folders -->
+    <aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto">
+      <div class="p-4">
+        <h2 class="text-lg font-semibold mb-4">Folders</h2>
+        <div class="folder-tree">
+          <ul id="folderTree">
+            <!-- Folders will be dynamically generated -->
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="flex-1 flex">
+      <!-- Filter panel (hidden by default) -->
+      <aside id="filterPanel" class="w-80 bg-white border-r border-gray-200 p-4 hidden">
+        <h2 class="text-lg font-semibold mb-4">Filters</h2>
+
+        <div class="mb-6">
+          <h3 class="font-medium mb-2">Asset Type</h3>
+          <label class="flex items-center mb-2">
+            <input type="checkbox" class="mr-2" value="image" checked> Images
+          </label>
+          <label class="flex items-center mb-2">
+            <input type="checkbox" class="mr-2" value="video" checked> Videos
+          </label>
+          <label class="flex items-center mb-2">
+            <input type="checkbox" class="mr-2" value="document" checked> Documents
+          </label>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="font-medium mb-2">Date Range</h3>
+          <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded mb-2">
+          <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded">
+        </div>
+
+        <div class="mb-6">
+          <h3 class="font-medium mb-2">File Size</h3>
+          <select class="w-full px-3 py-2 border border-gray-300 rounded">
+            <option>Any size</option>
+            <option>
+              < 1MB</option>
+            <option>1MB - 10MB</option>
+            <option>> 10MB</option>
+          </select>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="font-medium mb-2">Tags</h3>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm cursor-pointer">Marketing</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm cursor-pointer">Sales</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm cursor-pointer">Product</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm cursor-pointer">HR</span>
+          </div>
+        </div>
+
+        <button class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Apply Filters</button>
+      </aside>
+
+      <!-- Asset grid -->
+      <main class="flex-1 p-6 overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-gray-600"><span id="assetCount">0</span> assets found</p>
+          <div class="flex items-center space-x-4">
+            <select class="px-3 py-2 border border-gray-300 rounded">
+              <option>Sort by: Name</option>
+              <option>Sort by: Date</option>
+              <option>Sort by: Size</option>
+              <option>Sort by: Type</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="assetContainer" class="asset-grid">
+          <!-- Assets will be dynamically generated -->
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loader" class="flex justify-center items-center h-64 hidden">
+          <div class="loader"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Multi-select action bar -->
+  <div id="multiSelectBar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 hidden">
+    <div class="flex items-center justify-between">
+      <p class="text-gray-600"><span id="selectedCount">0</span> items selected</p>
+      <div class="flex space-x-4">
+        <button onclick="selectMultipleItems(selectedAssets)"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Add Selected Items
+        </button>
+        <button onclick="clearSelection()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+          Clear Selection
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset preview modal -->
+  <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center h-full p-8">
+      <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-full overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b">
+          <h3 id="previewTitle" class="text-lg font-semibold"></h3>
+          <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <div id="previewContent" class="mb-6">
+            <!-- Preview content -->
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="font-semibold">File Type:</p>
+              <p id="previewType" class="text-gray-600"></p>
+            </div>
+            <div>
+              <p class="font-semibold">File Size:</p>
+              <p id="previewSize" class="text-gray-600"></p>
+            </div>
+            <div>
+              <p class="font-semibold">Dimensions:</p>
+              <p id="previewDimensions" class="text-gray-600"></p>
+            </div>
+            <div>
+              <p class="font-semibold">Created:</p>
+              <p id="previewCreated" class="text-gray-600"></p>
+            </div>
+          </div>
+          <div class="mt-6 flex space-x-4">
+            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick="selectAsset()">
+              Select Asset
+            </button>
+            <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300" onclick="closePreview()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Mock data
+    const mockFolders = [
+      {
+        id: 1,
+        name: 'Marketing',
+        icon: 'fa-folder',
+        children: [
+          { id: 11, name: 'Campaigns', icon: 'fa-folder', children: [] },
+          { id: 12, name: 'Brand Assets', icon: 'fa-folder', children: [] },
+          { id: 13, name: 'Social Media', icon: 'fa-folder', children: [] }
+        ]
+      },
+      {
+        id: 2,
+        name: 'Sales',
+        icon: 'fa-folder',
+        children: [
+          { id: 21, name: 'Presentations', icon: 'fa-folder', children: [] },
+          { id: 22, name: 'Case Studies', icon: 'fa-folder', children: [] }
+        ]
+      },
+      {
+        id: 3,
+        name: 'Product',
+        icon: 'fa-folder',
+        children: [
+          { id: 31, name: 'Screenshots', icon: 'fa-folder', children: [] },
+          { id: 32, name: 'Documentation', icon: 'fa-folder', children: [] }
+        ]
+      },
+      {
+        id: 4,
+        name: 'HR',
+        icon: 'fa-folder',
+        children: [
+          { id: 41, name: 'Training', icon: 'fa-folder', children: [] },
+          { id: 42, name: 'Policies', icon: 'fa-folder', children: [] }
+        ]
+      }
+    ];
+
+    const mockAssets = [
+      { id: 1, name: 'Product Launch Banner', type: 'image', size: '2.3 MB', dimensions: '1920x1080', created: '2024-01-15', tags: ['Marketing', 'Product'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Product%20Launch%20Banner' },
+      { id: 2, name: 'Company Overview Video', type: 'video', size: '45.8 MB', duration: '3:24', created: '2024-01-10', tags: ['Marketing'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Company%20Overview%20Video' },
+      { id: 3, name: 'Sales Presentation Q1', type: 'document', size: '5.2 MB', pages: 32, created: '2024-01-20', tags: ['Sales'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Sales%20Presentation%20Q1' },
+      { id: 4, name: 'Team Photo 2024', type: 'image', size: '1.8 MB', dimensions: '2560x1440', created: '2024-01-08', tags: ['HR'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Team%20Photo%202024' },
+      { id: 5, name: 'Product Demo', type: 'video', size: '28.4 MB', duration: '5:12', created: '2024-01-18', tags: ['Product', 'Sales'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Product%20Demo' },
+      { id: 6, name: 'Brand Guidelines', type: 'document', size: '12.1 MB', pages: 64, created: '2024-01-05', tags: ['Marketing'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Brand%20Guidelines' },
+      { id: 7, name: 'Social Media Kit', type: 'image', size: '3.6 MB', dimensions: '1080x1080', created: '2024-01-22', tags: ['Marketing'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Social%20Media%20Kit' },
+      { id: 8, name: 'Employee Handbook', type: 'document', size: '2.9 MB', pages: 48, created: '2024-01-03', tags: ['HR'], thumbnail: 'http://zero.pitcher.com/ai/generatePictureURL.php?completeText=Employee%20Handbook' }
+    ];
+
+    let currentAssets = [...mockAssets];
+    let selectedFolder = null;
+    let selectedAsset = null;
+    let selectedAssets = [];
+    let isListView = false;
+    let isMultiSelect = false;
+
+    // Initialize the app
+    function init() {
+      renderFolders();
+      renderAssets(currentAssets);
+      setupEventListeners();
+    }
+
+    // Render folder tree
+    function renderFolders() {
+      const folderTree = document.getElementById('folderTree');
+      folderTree.innerHTML = '';
+
+      const rootFolders = mockFolders.map(folder => createFolderElement(folder));
+      rootFolders.forEach(el => folderTree.appendChild(el));
+    }
+
+    function createFolderElement(folder, level = 0) {
+      const li = document.createElement('li');
+      li.className = 'mb-1';
+
+      const div = document.createElement('div');
+      div.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+      div.style.paddingLeft = `${level * 1}rem`;
+
+      div.innerHTML = `
+        <i class="fas ${folder.icon} text-gray-600 mr-2"></i>
+        <span class="text-gray-700">${folder.name}</span>
+        ${folder.children.length > 0 ? '<i class="fas fa-chevron-right text-gray-400 ml-auto text-xs"></i>' : ''}
+      `;
+
+      div.onclick = () => selectFolder(folder);
+      li.appendChild(div);
+
+      if (folder.children.length > 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'ml-4 hidden';
+        folder.children.forEach(child => {
+          ul.appendChild(createFolderElement(child, level + 1));
+        });
+        li.appendChild(ul);
+
+        div.onclick = (e) => {
+          e.stopPropagation();
+          ul.classList.toggle('hidden');
+          const chevron = div.querySelector('.fa-chevron-right');
+          if (chevron) {
+            chevron.classList.toggle('fa-chevron-right');
+            chevron.classList.toggle('fa-chevron-down');
+          }
+          selectFolder(folder);
+        };
+      }
+
+      return li;
+    }
+
+    // Select folder
+    function selectFolder(folder) {
+      selectedFolder = folder;
+      // Filter assets based on folder selection (mock behavior)
+      const filteredAssets = mockAssets.filter(asset => {
+        // Simulate folder filtering
+        if (folder.name === 'Marketing') return asset.tags.includes('Marketing');
+        if (folder.name === 'Sales') return asset.tags.includes('Sales');
+        if (folder.name === 'Product') return asset.tags.includes('Product');
+        if (folder.name === 'HR') return asset.tags.includes('HR');
+        return true;
+      });
+      renderAssets(filteredAssets);
+    }
+
+    // Render assets
+    function renderAssets(assets) {
+      const container = document.getElementById('assetContainer');
+      const assetCount = document.getElementById('assetCount');
+
+      container.innerHTML = '';
+      assetCount.textContent = assets.length;
+
+      assets.forEach(asset => {
+        const assetElement = createAssetElement(asset);
+        container.appendChild(assetElement);
+      });
+    }
+
+    function createAssetElement(asset) {
+      const div = document.createElement('div');
+      div.className = isListView ?
+        'flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer relative' :
+        'bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden relative';
+
+      const isSelected = selectedAssets.some(a => a.id === asset.id);
+      if (isSelected) {
+        div.classList.add('ring-2', 'ring-blue-500');
+      }
+
+      if (isListView) {
+        div.innerHTML = `
+          ${isMultiSelect ? `<input type="checkbox" class="asset-checkbox mr-4" data-asset-id="${asset.id}" ${isSelected ? 'checked' : ''}>` : ''}
+          <img src="${asset.thumbnail}" alt="${asset.name}" class="w-16 h-16 object-cover rounded mr-4">
+          <div class="flex-1">
+            <h3 class="font-medium text-gray-800">${asset.name}</h3>
+            <p class="text-sm text-gray-600">${asset.type} • ${asset.size} • ${asset.created}</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            ${asset.tags.map(tag => `<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">${tag}</span>`).join('')}
+          </div>
+        `;
+      } else {
+        div.innerHTML = `
+          ${isMultiSelect ? `<input type="checkbox" class="asset-checkbox absolute top-2 right-2 z-10" data-asset-id="${asset.id}" ${isSelected ? 'checked' : ''}>` : ''}
+          <img src="${asset.thumbnail}" alt="${asset.name}" class="w-full h-40 object-cover">
+          <div class="p-4">
+            <h3 class="font-medium text-gray-800 truncate">${asset.name}</h3>
+            <p class="text-sm text-gray-600">${asset.type} • ${asset.size}</p>
+            <div class="mt-2 flex flex-wrap gap-1">
+              ${asset.tags.map(tag => `<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">${tag}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      const checkbox = div.querySelector('.asset-checkbox');
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          e.stopPropagation();
+          toggleAssetSelection(asset);
+        });
+      }
+
+      div.onclick = (e) => {
+        if (!e.target.classList.contains('asset-checkbox')) {
+          if (isMultiSelect) {
+            toggleAssetSelection(asset);
+          } else {
+            showPreview(asset);
+          }
+        }
+      };
+
+      return div;
+    }
+
+    // Show asset preview
+    function showPreview(asset) {
+      selectedAsset = asset;
+      const modal = document.getElementById('previewModal');
+      const title = document.getElementById('previewTitle');
+      const content = document.getElementById('previewContent');
+      const type = document.getElementById('previewType');
+      const size = document.getElementById('previewSize');
+      const dimensions = document.getElementById('previewDimensions');
+      const created = document.getElementById('previewCreated');
+
+      title.textContent = asset.name;
+      type.textContent = asset.type;
+      size.textContent = asset.size;
+      dimensions.textContent = asset.dimensions || asset.duration || `${asset.pages} pages`;
+      created.textContent = asset.created;
+
+      // Show preview based on type
+      if (asset.type === 'image') {
+        content.innerHTML = `<img src="${asset.thumbnail}" alt="${asset.name}" class="max-w-full max-h-96 mx-auto">`;
+      } else if (asset.type === 'video') {
+        content.innerHTML = `
+          <div class="relative">
+            <img src="${asset.thumbnail}" alt="${asset.name}" class="max-w-full max-h-96 mx-auto">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <i class="fas fa-play-circle text-white text-6xl opacity-80"></i>
+            </div>
+          </div>
+        `;
+      } else {
+        content.innerHTML = `<img src="${asset.thumbnail}" alt="${asset.name}" class="max-w-full max-h-96 mx-auto">`;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.add('hidden');
+    }
+
+    // Define the initialize function that Canvas UI will call
+    window.initialize = function (context, callback) {
+      console.log('Multimedia selector initialized with context:', context);
+
+      // Store the callback for later use
+      window.canvasCallback = callback;
+
+      // Initialize the app
+      init();
+    }
+
+    // Function to send selected item to Canvas UI - updated to use the new callback
+    function selectAsset() {
+      if (selectedAsset && window.canvasCallback) {
+        window.canvasCallback({
+          type: 'add-item',
+          item: {
+            id: selectedAsset.id,
+            name: selectedAsset.name,
+            thumbnailUrl: selectedAsset.thumbnail,
+            url: selectedAsset.thumbnail, // Using thumbnail as URL for now
+            type: selectedAsset.type,
+            source: 'aprimo-dam'
+          }
+        });
+        closePreview();
+      }
+    }
+
+    // Function to send multiple items - make it globally accessible
+    window.selectMultipleItems = function (items) {
+      if (window.canvasCallback) {
+        window.canvasCallback({
+          type: 'add-items',
+          items: items.map(item => ({
+            id: item.id,
+            name: item.name,
+            thumbnailUrl: item.thumbnail,
+            url: item.thumbnail, // Using thumbnail as URL for now
+            type: item.type,
+            source: 'aprimo-dam'
+          }))
+        });
+      }
+      clearSelection();
+    }
+
+    // Toggle asset selection for multi-select
+    function toggleAssetSelection(asset) {
+      const index = selectedAssets.findIndex(a => a.id === asset.id);
+      if (index === -1) {
+        selectedAssets.push(asset);
+      } else {
+        selectedAssets.splice(index, 1);
+      }
+      updateSelectionCount();
+      renderAssets(currentAssets);
+    }
+
+    // Update selection count
+    function updateSelectionCount() {
+      const count = document.getElementById('selectedCount');
+      if (count) {
+        count.textContent = selectedAssets.length;
+      }
+    }
+
+    // Clear selection - make it globally accessible
+    window.clearSelection = function () {
+      selectedAssets = [];
+      updateSelectionCount();
+      renderAssets(currentAssets);
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Search
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filtered = mockAssets.filter(asset =>
+          asset.name.toLowerCase().includes(searchTerm) ||
+          asset.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        );
+        renderAssets(filtered);
+      });
+
+      // View toggle
+      document.getElementById('viewToggle').addEventListener('click', () => {
+        isListView = !isListView;
+        const container = document.getElementById('assetContainer');
+        container.classList.toggle('list-view');
+        renderAssets(currentAssets);
+      });
+
+      // Multi-select toggle
+      document.getElementById('multiSelectToggle').addEventListener('click', () => {
+        isMultiSelect = !isMultiSelect;
+        const btn = document.getElementById('multiSelectToggle');
+        const bar = document.getElementById('multiSelectBar');
+
+        if (isMultiSelect) {
+          btn.classList.add('bg-blue-600', 'text-white');
+          btn.classList.remove('bg-gray-100', 'text-gray-700');
+          bar.classList.remove('hidden');
+        } else {
+          btn.classList.remove('bg-blue-600', 'text-white');
+          btn.classList.add('bg-gray-100', 'text-gray-700');
+          bar.classList.add('hidden');
+          clearSelection();
+        }
+
+        renderAssets(currentAssets);
+      });
+
+      // Filter toggle
+      document.getElementById('filterToggle').addEventListener('click', () => {
+        const filterPanel = document.getElementById('filterPanel');
+        filterPanel.classList.toggle('hidden');
+      });
+
+      // Filter checkboxes
+      const typeCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+      typeCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          const selectedTypes = Array.from(typeCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+          const filtered = mockAssets.filter(asset =>
+            selectedTypes.includes(asset.type)
+          );
+          renderAssets(filtered);
+        });
+      });
+    }
+
+    // Initialize on load - check if we have the Canvas callback
+    window.addEventListener('DOMContentLoaded', function () {
+      // If not initialized by Canvas UI, initialize normally
+      init();
+
+    });
+  </script>
+</body>
+
+</html>

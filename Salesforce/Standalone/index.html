@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Salesforce Debug App</title>
+
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/theme"></script>
+	<script src="https:///cdnjs.cloudflare.com/ajax/libs/jsforce/1.9.1/jsforce.min.js"></script>
+	<script type="text/javascript">
+		const api = pitcher.usePitcherApi()
+		window.api = api
+
+		let sfdcConn = {}
+		let currentCanvas = {}
+		const onIframeMessage = async (message) => {
+			const { type, body: { action = null, data = null } = {} } = message.data;
+
+			if (type === 'DATA_MESSAGE' && action) {
+				if (action === 'setData') {
+					window.pitcherData = data;
+					currentCanvas = window.pitcherData.canvas
+				}
+			}
+		}
+		window.addEventListener('message', onIframeMessage);
+		window.pitcherData = {}
+		function revokeSFDCtoken(isBrowser) {
+			// Simulate revocation by clearing the connected service token
+			// Note: Actual revocation requires a server-side call to Salesforce
+			window.pitcherData = window.env.pitcher
+			if (window.pitcherData && window.pitcherData.user && window.pitcherData.user.connected_services) {
+				window.pitcherData.user.connected_services.forEach(service => {
+					if (service.provider === "salesforce") {
+
+						var accessToken = token
+						var url = service.urls.custom_domain + '/services/oauth2/revoke';
+						if (isBrowser) {
+							window.open(url + "?token=" + accessToken)
+						}
+						else {
+							fetch(url + "?token=" + accessToken)
+								.then(response => response.text())
+								.then(response => {
+									// Handle success response
+									document.getElementById("consoleDisplay").textContent = "Token revoked successfully";
+								})
+								.catch(error => {
+									// Handle error response
+									document.getElementById("consoleDisplay").textContent = "Failed to revoke token, error: " + error;
+								});
+						}
+					}
+				});
+				setTimeout(function () {
+				}, 1000);
+
+			} else {
+				document.getElementById("consoleDisplay").textContent = 'SFDC token not found or already revoked.';
+			}
+		}
+		async function handle401Error() {
+			var response = await api.refreshServiceToken({ connection_id: 'salesforce' })
+			token = response.access_token
+			sfdcConn = new jsforce.Connection({
+				instanceUrl: sfdcDomain,
+				accessToken: token
+			});
+			document.getElementById("consoleDisplay").textContent = "got new token";
+		}
+		function displayEnv(envData) {
+			// Convert envData object to string for displaying
+			let envDataStr = JSON.stringify(envData, null, 4);
+			document.getElementById('codeDisplay').textContent = envDataStr;
+		}
+		async function getAccountBtn() {
+			try {
+				let queryResult = await new Promise((resolve, reject) => {
+					sfdcConn.query("SELECT Id,Name FROM Account LIMIT 1", function (err, res) {
+						if (err) reject(err);
+						else resolve(res);
+					});
+				});
+
+				let sfdcResponse = queryResult.records;
+				document.getElementById("consoleDisplay").textContent = JSON.stringify(sfdcResponse);
+			} catch (e) {
+				console.log(e)
+				document.getElementById("consoleDisplay").textContent = e.errorCode;
+				// Check if the error is a 401 Unauthorized error
+				if (e.errorCode === "INVALID_SESSION_ID") {
+					// Call your specific method here for handling a 401 error
+					await handle401Error(); // This is a placeholder; replace with your actual method
+				} else {
+					// Handle other errors or rethrow them
+					console.error(e);
+				}
+			}
+		}
+		let sfdcDomain = ""
+		let token = ""
+		document.addEventListener('DOMContentLoaded', function () {
+			api.getEnv().then(function (result) {
+				env = result
+				window.env = env
+				displayEnv(env)
+				instanceID = env.pitcher.instance.id
+
+				try {
+					var connectedServices = result.pitcher.user.connected_services;
+					var sfdc = connectedServices[0];
+					sfdcDomain = sfdc?.urls?.custom_domain;
+					token = sfdc?.access_token;
+					sfdcConn = new jsforce.Connection({
+						instanceUrl: sfdcDomain,
+						accessToken: token
+					});
+				} catch (e) {
+
+				}
+			});
+			document.getElementById('revokeTokenBtn').addEventListener('click', function () {
+				revokeSFDCtoken();
+			});
+			document.getElementById('revokeTokenBtnBrowser').addEventListener('click', function () {
+				revokeSFDCtoken(true);
+			});
+			document.getElementById('getAccountBtn').addEventListener('click', function () {
+				getAccountBtn();
+			});
+		});
+	</script>
+</head>
+
+<body class="p-6">
+	Debugger v4
+	<button id="revokeTokenBtn" class="mt-2 p-2 bg-red-500 text-white rounded">Revoke SFDC Token (iPad)</button>
+	<button id="revokeTokenBtnBrowser" class="mt-2 p-2 bg-red-500 text-white rounded">Revoke SFDC Token
+		(Browser)</button>
+	<button id="getAccountBtn" class="mt-2 p-2 bg-red-500 text-white rounded">Get account</button>
+	<div id="consoleDisplay" class="p-4 border rounded"> <!-- This div is where the env data will be displayed -->
+	</div>
+	<div id="envDisplay" class="p-4 border rounded"> <!-- This div is where the env data will be displayed -->
+		<pre id="codeDisplay">
+		</pre>
+	</div>
+</body>
+
+</html>

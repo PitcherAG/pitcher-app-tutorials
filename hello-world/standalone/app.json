@@ -1,0 +1,12 @@
+{
+  "name": "hello-world-standalone",
+  "type": "web",
+  "version": "2025.03.20.1742488208962",
+  "description": "Hello World Standalone",
+  "displayName": "Hello World Standalone",
+  "provide": [
+    "ui:menu"
+  ],
+  "icon": "fas fa-music",
+  "display_name": "Hello World Standalone"
+}

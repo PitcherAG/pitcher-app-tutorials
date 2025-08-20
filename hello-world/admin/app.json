@@ -1,0 +1,17 @@
+{
+  "name": "hello-world-admin",
+  "type": "web",
+  "version": "0.0.17",
+  "description": "Hello World Admin",
+  "displayName": "Hello World Admin",
+  "provide": [
+    "ui:menu"
+  ],
+  "icon": "fas fa-music",
+  "display_name": "Hello World Admin",
+  "module": {
+    "admin_instance": {
+      "enabled": true
+    }
+  }
+}

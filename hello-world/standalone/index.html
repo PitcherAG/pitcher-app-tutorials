@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/theme"></script>
+
+</head>
+
+<body class="min-h-screen flex items-center justify-center">
+
+
+	<script>
+
+		const api = pitcher.useApi()
+		window.api = api
+		let env = {}
+		let instanceID = ""
+		let currentCanvas = null
+
+		document.addEventListener('DOMContentLoaded', function () {
+			api.getEnv().then(function (result) {
+				window.env = result
+				document.body.innerHTML = `<h1>Hello</h1><pre>${JSON.stringify(result, null, 2)}</pre>`;
+
+			});
+		});
+
+		window.addEventListener('message', onIframeMessage);
+		window.pitcherData = {}
+
+
+	</script>
+</body>
+
+</html>
