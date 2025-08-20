@@ -5,7 +5,6 @@
   "description": "Hello World Standalone",
   "displayName": "Hello World Standalone",
   "provide": [
-    "yacht",
     "ui:menu"
   ],
   "icon": "fas fa-music",

@@ -1,0 +1,18 @@
+{
+  "name": "hello-world-popup",
+  "type": "web",
+  "version": "0.0.19",
+  "description": "Hello World Popup",
+  "displayName": "Hello World Popup",
+  "icon": "fas fa-heart",
+  "display_name": "Hello World Popup",
+  "order_override": 1,
+  "app_type": "canvas-popup",
+  "app_options": {
+    "dimensions": {
+      "width": "90vw",
+      "height": "90vh"
+    },
+    "placement": "center"
+  }
+}

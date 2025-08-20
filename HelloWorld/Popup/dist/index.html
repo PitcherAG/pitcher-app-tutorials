@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/theme"></script>
+	<style>
+		body, html {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			overflow: hidden;
+		}
+		iframe {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			border: none;
+		}
+	</style>
+</head>
+
+<body>
+	<script>
+		// Initialize Pitcher API
+		const pitcher = window.pitcher || {};
+		const api = pitcher.useApi ? pitcher.useApi() : null;
+		const uiApi = pitcher.useUi ? pitcher.useUi() : pitcher.useApi;
+		let env = {}
+		let instanceID = ""
+		let currentCanvas = null
+		window.initialize = function (data) {
+			window.pitcherData = JSON.parse(JSON.stringify(data));
+			currentCanvas = window.pitcherData.active_canvas;
+			isInitialized = true;
+			
+			// Create fullscreen iframe
+			const iframe = document.createElement('iframe');
+			iframe.src = 'https://pitcher.com';
+			iframe.frameBorder = '0';
+			iframe.allowFullscreen = true;
+			document.body.appendChild(iframe);
+		}
+	</script>
+</body>
+
+</html>
