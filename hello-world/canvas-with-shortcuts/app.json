@@ -1,0 +1,48 @@
+{
+  "name": "hello-canvas-with-shortcuts",
+  "type": "web",
+  "version": "0.0.11",
+  "description": "Hello World Canvas With Shortcuts",
+  "displayName": "Hello World Canvas With Shortcuts",
+  "provide": ["ui:menu"],
+  "icon": "fas fa-music",
+  "display_name": "Hello World Canvas With Shortcuts",
+  "module": {
+    "dsr": {
+      "enabled": true
+    },
+    "canvas": {
+      "enabled": true,
+      "auto_install": false,
+      "shortcuts": {
+        "edit": [
+          {
+            "id": "hello-canvas-with-shortcuts",
+            "icon": "fas fa-window-maximize",
+            "order_override": 100
+          }
+        ],
+        "fullscreen": [
+          {
+            "id": "hello-canvas-with-shortcuts",
+            "icon": "fas fa-window-maximize",
+            "order_override": 100
+          }
+        ],
+        "presentation": [
+          {
+            "id": "hello-canvas-with-shortcuts",
+            "icon": "fas fa-window-maximize",
+            "order_override": 300
+          }
+        ]
+      },
+      "defaults": {
+        "dimensions": {
+          "width": "100%",
+          "height": "1000px"
+        }
+      }
+    }
+  }
+}
