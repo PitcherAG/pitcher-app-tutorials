@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@pitcher/theme"></script>
+	<script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
+
+</head>
+
+<body style="margin: 0; padding: 0; overflow: hidden;">
+
+
+	<script>
+
+		const api = pitcher.useApi()
+		const uiApi = pitcher.useUi()
+		window.api = api
+		let env = {}
+		let instanceID = ""
+		let currentCanvas = null
+
+		// Function to process URL with Handlebars template
+		function processUrlWithContext(urlTemplate, context) {
+			try {
+				// Compile the Handlebars template
+				const template = Handlebars.compile(urlTemplate);
+				// Process the template with the canvas context
+				return template(context);
+			} catch (error) {
+				console.error('Error processing URL template:', error);
+				return urlTemplate; // Return original URL if template processing fails
+			}
+		}
+		const onIframeMessage = async (message) => {
+			const { type, body: { action = null, data = null } = {} } = message.data;
+			try {
+				if (message.data.event.type == "canvas_updated") {
+					console.log("canvas updated");
+					api.getCanvas({ "id": window.pitcherData.canvas.id }).then(function (result) {
+						console.log(result);
+						window.pitcherData.canvas = result;
+						const canvasWithoutContent = { ...result };
+						delete canvasWithoutContent.content;
+						const iframe = document.getElementById('targetFrame');
+
+						iframe.contentWindow.postMessage({
+							type: 'CANVAS_DATA',
+							canvas: canvasWithoutContent
+						}, '*');
+					});
+				}
+			} catch (error) {
+
+			}
+
+			if (type === 'IFRAME_DATA_MESSAGE' && action) {
+				if (action === 'set_data') {
+					window.pitcherData = data;
+					currentCanvas = window.pitcherData.canvas
+					checkViewMode(data);
+					api.getEnv().then(function (result) {
+						window.env = result
+						const iframeUrl = "https://en.wikipedia.org/wiki/{{Account.Name}}"
+						const processedUrl = processUrlWithContext(iframeUrl, data.canvas?.context || {});
+						document.body.innerHTML = `<iframe id="targetFrame" src="${processedUrl}" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; margin: 0; padding: 0;" frameborder="0" seamless></iframe>`;
+					});
+				}
+			}
+		}
+		document.addEventListener('DOMContentLoaded', function () {
+			window.parent.postMessage(
+				{
+					type: "IFRAME_DATA_MESSAGE",
+					body: {
+						action: "iframe_loaded",
+						data: {},
+					},
+				},
+				'*'
+			);
+		});
+
+		window.addEventListener('message', onIframeMessage);
+
+		// Add window resize listener to recalculate size
+		window.parent.addEventListener('resize', function () {
+			updateIframeSize();
+		});
+		window.pitcherData = {}
+		function updateIframeSize() {
+			// Check if full screen mode is enabled
+			console.log("updateIframeSize");
+			const targetFrame = document.getElementById('targetFrame');
+			if (targetFrame) {
+				const rect = targetFrame.getBoundingClientRect();
+
+				// Get iframe position relative to parent window
+				const iframeRect = window.frameElement?.getBoundingClientRect();
+				// Combine iframe and canvas positions
+				const absoluteTop = iframeRect ? iframeRect.top + rect.top : rect.top;
+
+				const height = window.parent.innerHeight - absoluteTop;
+				const finalHeight = Math.max(height, 0);
+
+				targetFrame.style.height = `${finalHeight}px`;
+				uiApi.appResize({ height: finalHeight });
+			}
+		}
+
+		function checkViewMode(data) {
+			updateIframeSize();
+		}
+
+
+	</script>
+</body>
+
+</html>

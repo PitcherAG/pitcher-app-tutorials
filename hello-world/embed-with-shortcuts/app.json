@@ -1,0 +1,43 @@
+{
+  "name": "embed-popup-hardcoded",
+  "type": "web",
+  "version": "0.0.1",
+  "description": "Wikipedia Popup Hardcoded",
+  "displayName": "Wikipedia Popup Hardcoded",
+  "provide": [
+    "ui:menu"
+  ],
+  "icon": "fas fa-cat-space",
+  "display_name": "Wikipedia Popup Hardcoded",
+  "module": {
+    "dsr": {
+      "enabled": true
+    },
+    "canvas": {
+      "enabled": true,
+      "auto_install": false,
+      "shortcuts": {
+        "fullscreen": [
+          {
+            "id": "iframe-passer",
+            "icon": "fas fa-cat-space",
+            "order_override": 200
+          }
+        ],
+        "presentation": [
+          {
+            "id": "iframe-passer",
+            "icon": "fas fa-cat-space",
+            "order_override": 200
+          }
+        ]
+      },
+      "defaults": {
+        "dimensions": {
+          "width": "100%",
+          "height": "1000px"
+        }
+      }
+    }
+  }
+}
