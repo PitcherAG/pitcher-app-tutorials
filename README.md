@@ -16,31 +16,46 @@ Full API documentation is available at: [Pitcher API Documentation](https://pitc
 
 Basic examples showing how to initialize a Pitcher app in different contexts:
 
-- **Standalone**: Simple independent application
-- **Admin**: Example for admin panel integration
-- **Canvas**: Embedded within Canvas UI
+- **[Standalone](hello-world/standalone/)**: Simple independent application
+- **[Admin](hello-world/admin/)**: Example for admin panel integration
+- **[Canvas](hello-world/canvas/)**: Embedded within Canvas UI
+- **[Canvas with Shortcuts](hello-world/canvas-with-shortcuts/)**: Pitchdeck app with shortcuts support
+- **[Embed with Shortcuts](hello-world/embed-with-shortcuts/)**: iFrame App with Dynamic Parameter passing with shortcuts support
+- **[Popup](hello-world/popup/)**: Popup-based application
 
 ### Entity Examples
 
 Examples demonstrating how to work with Pitcher entities:
 
-- **Standalone**: Working with entities in standalone mode
+- **[Standalone](Entities/Standalone/)**: Working with entities in standalone mode
 
 ### Salesforce Integration
 
 Examples showing how to integrate with Salesforce:
 
-- **Standalone**: Salesforce integration in standalone mode
+- **[Standalone](Salesforce/Standalone/)**: Salesforce integration in standalone mode
+
+### Multimedia Selector Apps
+
+Examples for multimedia and content selection:
+
+- **[Content Selector](multimedia-selector-apps/content-selector/)**: Content selection interface
+
+### Web File Apps
+
+Examples for web file applications:
+
+- **[SFDC Querying in Web File](web-file-apps/sfdc-quering-in-web-file/)**: Salesforce data querying within web files
+- **[Simple SFDC and Call Data in Web File](web-file-apps/simple-sfdc-and-call-data-in-web-file/)**: Combining Salesforce and call data
 
 ## Project Structure
 
 Each example includes:
 
 - `app.json`: Configuration file for the application
-- `dist/`: Distribution folder containing the built application
-  - `index.html`: Main entry point for the application
-  - `thumbnail.webp`: Preview image
-  - `README.md`: Example-specific documentation
+- `index.html`: Main entry point for the application
+- `thumbnail.webp`: Preview image
+- `README.md`: Example-specific documentation
 
 ## Development Guide
 
