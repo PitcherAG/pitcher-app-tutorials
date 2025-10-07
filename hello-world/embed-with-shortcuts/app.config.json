@@ -1,0 +1,31 @@
+{
+  "sections": [
+    {
+      "label": "iFrame URL",
+      "fields": [
+        {
+          "type": "text",
+          "name": "url",
+          "label": "iFrame URL",
+          "help_text": "Provide a URL for the iFrame that listens to window messages",
+          "is_required": false,
+          "is_filterable": false
+        }
+      ]
+    },
+    {
+      "label": "Canvas Content Settings",
+      "fields": [
+        {
+          "type": "checkbox",
+          "name": "include_canvas_content",
+          "label": "Include Canvas Content",
+          "help_text": "Send full canvas content to iframe (if disabled, only metadata & context are sent)",
+          "is_required": false,
+          "is_filterable": false,
+          "default_value": false
+        }
+      ]
+    }
+  ]
+}
