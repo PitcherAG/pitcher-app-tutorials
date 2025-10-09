@@ -1,14 +1,11 @@
 {
-  "name": "embed-popup-hardcoded",
+  "name": "embed-iframe-example",
   "type": "web",
-  "version": "0.0.1",
-  "description": "Wikipedia Popup Hardcoded",
-  "displayName": "Wikipedia Popup Hardcoded",
-  "provide": [
-    "ui:menu"
-  ],
+  "version": "0.0.49",
+  "description": "Embed iFrame Message Passing Example",
+  "provide": ["ui:menu"],
   "icon": "fas fa-cat-space",
-  "display_name": "Wikipedia Popup Hardcoded",
+  "display_name": "iFrame Message Passer Example",
   "module": {
     "dsr": {
       "enabled": true
@@ -29,6 +26,27 @@
             "id": "iframe-passer",
             "icon": "fas fa-cat-space",
             "order_override": 200
+          }
+        ]
+      },
+      "settings": {
+        "sections": [
+          {
+            "label": "Settings",
+            "fields": [
+              {
+                "type": "text",
+                "name": "url",
+                "label": "iFrame URL",
+                "help_text": "Provide a URL for the iFrame. Use Handlebars syntax like {{SelectedAccount.Name}} to inject canvas context values. Example: https://www.google.com/search?q={{SelectedAccount.Name}}"
+              },
+              {
+                "type": "checkbox",
+                "name": "full_screen_mode",
+                "label": "Full Screen Mode",
+                "help_text": "Enable full screen height for the iFrame"
+              }
+            ]
           }
         ]
       },
