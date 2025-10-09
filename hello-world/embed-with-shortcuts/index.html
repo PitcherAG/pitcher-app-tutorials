@@ -106,11 +106,6 @@
                           "*"
                         );
                       }
-
-                      // Update iframe size after it loads if full screen mode is enabled
-                      if (data.settings?.full_screen_mode === true) {
-                        updateIframeSize();
-                      }
                     };
                   } else {
                     document.body.innerHTML = `
@@ -180,65 +175,7 @@
       });
 
       window.addEventListener("message", onIframeMessage);
-
-      // Add window resize listener to recalculate size
-      window.parent.addEventListener("resize", function () {
-        updateIframeSize();
-      });
-
-      // Call updateIframeSize periodically every second to catch all size changes
-      let updateInterval = null;
-      function startUpdateInterval() {
-        if (!updateInterval) {
-          updateInterval = setInterval(function () {
-            updateIframeSize();
-          }, 100);
-        }
-      }
-      function stopUpdateInterval() {
-        if (updateInterval) {
-          clearInterval(updateInterval);
-          updateInterval = null;
-        }
-      }
-      window.lastHeight = 0;
       window.pitcherData = {};
-      function updateIframeSize() {
-        // Check if full screen mode is enabled
-        if (window.pitcherData?.settings?.full_screen_mode === true) {
-          startUpdateInterval();
-          const targetFrame = document.getElementById("targetFrame");
-          if (targetFrame) {
-            const rect = targetFrame.getBoundingClientRect();
-
-            // Get iframe position relative to parent window
-            const iframeRect = window.frameElement?.getBoundingClientRect();
-            // Combine iframe and canvas positions
-            const absoluteTop = iframeRect
-              ? iframeRect.top + rect.top
-              : rect.top;
-
-            const height = window.parent.innerHeight - absoluteTop;
-            const finalHeight = Math.max(height, 0);
-
-            targetFrame.style.height = `${finalHeight}px`;
-            if (finalHeight !== window.lastHeight) {
-              window.lastHeight = finalHeight;
-              uiApi.appResize({ height: finalHeight });
-              console.log("updateIframeSize", finalHeight);
-            }
-          }
-        } else {
-          stopUpdateInterval();
-        }
-      }
-
-      function checkViewMode(data) {
-        // Check for full screen mode and update size
-        if (data.settings?.full_screen_mode === true) {
-          updateIframeSize();
-        }
-      }
     </script>
   </body>
 </html>

@@ -39,12 +39,6 @@
                 "name": "url",
                 "label": "iFrame URL",
                 "help_text": "Provide a URL for the iFrame. Use Handlebars syntax like {{SelectedAccount.Name}} to inject canvas context values. Example: https://www.google.com/search?q={{SelectedAccount.Name}}"
-              },
-              {
-                "type": "checkbox",
-                "name": "full_screen_mode",
-                "label": "Full Screen Mode",
-                "help_text": "Enable full screen height for the iFrame"
               }
             ]
           }
