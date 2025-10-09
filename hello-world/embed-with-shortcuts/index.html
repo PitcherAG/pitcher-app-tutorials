@@ -62,7 +62,6 @@
           if (action === "set_data") {
             window.pitcherData = data;
             currentCanvas = window.pitcherData.canvas;
-            checkViewMode(data);
             api.getEnv().then(function (result) {
               window.env = result;
               api
@@ -139,7 +138,6 @@
           if (action === "canvas_updated") {
             window.pitcherData = data;
             currentCanvas = window.pitcherData.canvas;
-            checkViewMode(data);
 
             // Send updated canvas data to iframe
             const iframe = document.getElementById("targetFrame");
