@@ -1,0 +1,17 @@
+{
+  "name": "pitcher-ui-demo",
+  "display_name": "Pitcher UI Demo",
+  "description": "A comprehensive demo app showcasing the Pitcher UI Framework (@pitcher/css) with interactive examples",
+  "version": "2025.10.17.1760711385195",
+  "author": "Pitcher",
+  "icon": "fas fa-palette",
+  "category": "Tutorial",
+  "module": {
+    "ui_app": {
+      "enabled": true
+    },
+    "admin_instance": {
+      "enabled": true
+    }
+  }
+}

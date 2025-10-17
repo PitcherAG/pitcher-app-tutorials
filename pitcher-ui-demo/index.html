@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pitcher UI Demo - Contact Manager</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pitcher/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: var(--spacing-4);
+        background: var(--p-primary6);
+        font-family: var(--font-family);
+      }
+      .app-header {
+        background: white;
+        padding: var(--spacing-4);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-4);
+        box-shadow: var(--shadow-md);
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-4);
+        margin-bottom: var(--spacing-4);
+      }
+      .stat-card {
+        background: white;
+        padding: var(--spacing-4);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        border-left: 4px solid var(--p-primary);
+      }
+      .stat-card.success {
+        border-left-color: var(--p-success);
+      }
+      .stat-card.warning {
+        border-left-color: var(--p-warning);
+      }
+      .stat-card.info {
+        border-left-color: var(--p-info);
+      }
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--p-primary);
+        margin: var(--spacing-2) 0;
+      }
+      .stat-label {
+        color: var(--rsk-color-gray-600);
+        font-size: var(--font-size-sm);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .contact-list {
+        background: white;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+      }
+      .empty-state {
+        padding: var(--spacing-8) var(--spacing-4);
+        text-align: center;
+      }
+      .empty-state-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto var(--spacing-3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--p-primary6);
+        color: var(--p-primary3);
+        font-size: 1.5rem;
+      }
+      .empty-state-text {
+        color: var(--rsk-color-gray-600);
+        font-size: var(--font-size-base);
+        margin: 0;
+      }
+      .contact-item {
+        display: flex;
+        align-items: center;
+        padding: var(--spacing-4);
+        border-bottom: 1px solid var(--rsk-color-gray-200);
+        transition: background 0.2s;
+      }
+      .contact-item:hover {
+        background: var(--p-primary6);
+      }
+      .contact-item:last-child {
+        border-bottom: none;
+      }
+      .contact-avatar {
+        margin-right: var(--spacing-3);
+      }
+      .contact-info {
+        flex: 1;
+      }
+      .contact-name {
+        font-weight: 600;
+        color: var(--p-text1);
+        margin-bottom: var(--spacing-1);
+      }
+      .contact-details {
+        font-size: var(--font-size-sm);
+        color: var(--rsk-color-gray-600);
+      }
+      .contact-actions {
+        display: flex;
+        gap: var(--spacing-2);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- App Header -->
+    <div class="app-header">
+      <div class="p-flex p-items-center p-justify-between">
+        <div>
+          <h1 class="p-m-0 p-mb-1">Contact Manager</h1>
+          <p class="p-m-0 p-text-gray">
+            Built with Pitcher UI Framework (@pitcher/css)
+          </p>
+        </div>
+        <button class="p-btn p-btn-primary" onclick="openAddContactModal()">
+          <i class="fas fa-plus"></i> Add Contact
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Contacts</div>
+        <div class="stat-value" id="totalContacts">0</div>
+        <div class="p-text-xs p-text-gray">All contacts in database</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-label">Active</div>
+        <div
+          class="stat-value"
+          style="color: var(--p-success)"
+          id="activeContacts"
+        >
+          0
+        </div>
+        <div class="p-text-xs p-text-gray">Currently active contacts</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-label">Pending</div>
+        <div
+          class="stat-value"
+          style="color: var(--p-warning)"
+          id="pendingContacts"
+        >
+          0
+        </div>
+        <div class="p-text-xs p-text-gray">Awaiting follow-up</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-label">This Week</div>
+        <div class="stat-value" style="color: var(--p-info)" id="weekContacts">
+          0
+        </div>
+        <div class="p-text-xs p-text-gray">New contacts added</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="p-card p-mb-4">
+      <div class="p-card-body p-p-0">
+        <div class="p-tabs" style="margin: 0">
+          <button class="p-tab active" data-tab="all">All Contacts</button>
+          <button class="p-tab" data-tab="active">Active</button>
+          <button class="p-tab" data-tab="pending">Pending</button>
+        </div>
+
+        <!-- All Contacts Tab -->
+        <div class="p-tab-content active" data-tab-content="all">
+          <div id="contactListAll" class="contact-list">
+            <!-- Contacts will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Active Tab -->
+        <div
+          class="p-tab-content"
+          data-tab-content="active"
+          style="display: none"
+        >
+          <div id="contactListActive" class="contact-list">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <p class="empty-state-text">Active contacts will appear here</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Tab -->
+        <div
+          class="p-tab-content"
+          data-tab-content="pending"
+          style="display: none"
+        >
+          <div id="contactListPending" class="contact-list">
+            <div class="empty-state">
+              <div class="empty-state-icon" style="background: var(--p-warning2); color: var(--p-warning);">
+                <i class="fas fa-clock"></i>
+              </div>
+              <p class="empty-state-text">Pending contacts will appear here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Contact Modal -->
+    <div id="addContactModal" class="p-modal">
+      <div class="p-modal-content">
+        <div class="p-modal-header">
+          <div class="p-modal-title">Add New Contact</div>
+          <button class="p-modal-close" onclick="closeAddContactModal()">
+            &times;
+          </button>
+        </div>
+        <div class="p-modal-body">
+          <div class="p-form-group">
+            <label class="p-label required">Full Name</label>
+            <input
+              type="text"
+              class="p-input"
+              id="contactName"
+              placeholder="Enter full name..."
+            />
+          </div>
+          <div class="p-form-group">
+            <label class="p-label required">Email</label>
+            <input
+              type="email"
+              class="p-input"
+              id="contactEmail"
+              placeholder="contact@example.com"
+            />
+          </div>
+          <div class="p-form-group">
+            <label class="p-label">Phone</label>
+            <input
+              type="tel"
+              class="p-input"
+              id="contactPhone"
+              placeholder="+1 (555) 123-4567"
+            />
+          </div>
+          <div class="p-form-group">
+            <label class="p-label">Company</label>
+            <input
+              type="text"
+              class="p-input"
+              id="contactCompany"
+              placeholder="Company name"
+            />
+          </div>
+          <div class="p-form-group">
+            <label class="p-label">Status</label>
+            <select class="p-select" id="contactStatus">
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+        </div>
+        <div class="p-modal-footer">
+          <button
+            class="p-btn p-btn-secondary"
+            onclick="closeAddContactModal()"
+          >
+            Cancel
+          </button>
+          <button class="p-btn p-btn-primary" onclick="addContact()">
+            Add Contact
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Pitcher API
+      let api;
+      try {
+        api = window.pitcher?.useApi();
+      } catch (e) {
+        console.log("Pitcher API not available:", e);
+      }
+
+      // Instance Color Support
+      async function applyInstanceColor() {
+        try {
+          if (window.parent?.jsApiLocation === "admin") {
+            console.log("Admin context detected, skipping instance color");
+            return;
+          }
+
+          if (!api) return;
+
+          const env = await api.getEnv();
+          const instanceColor = env.pitcher?.instance?.color;
+
+          if (instanceColor) {
+            document.documentElement.style.setProperty(
+              "--p-primary",
+              instanceColor
+            );
+            console.log("Applied instance color:", instanceColor);
+          }
+        } catch (error) {
+          console.log("Could not load instance color:", error);
+        }
+      }
+
+      // Toast notification
+      window.showToast = function (
+        message = "Operation completed!",
+        type = "success"
+      ) {
+        if (api && api.toast) {
+          api.toast({ message, type });
+        } else {
+          console.warn("Pitcher API not available");
+        }
+      };
+
+      // Tab Switching
+      let tabsInitialized = false;
+      function initializeTabs() {
+        if (tabsInitialized) return;
+
+        const tabs = document.querySelectorAll(".p-tab[data-tab]");
+        const tabContents = document.querySelectorAll(
+          ".p-tab-content[data-tab-content]"
+        );
+
+        if (tabs.length === 0) return;
+
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            if (tab.disabled) return;
+
+            const targetTab = tab.dataset.tab;
+
+            tabs.forEach((t) => t.classList.remove("active"));
+            tabContents.forEach((content) => {
+              content.classList.remove("active");
+              content.style.display = "none";
+            });
+
+            tab.classList.add("active");
+            const targetContent = document.querySelector(
+              `[data-tab-content="${targetTab}"]`
+            );
+            if (targetContent) {
+              targetContent.classList.add("active");
+              targetContent.style.display = "block";
+            }
+          });
+        });
+
+        tabsInitialized = true;
+      }
+
+      // Sample contacts data
+      let contacts = [
+        {
+          id: 1,
+          name: "Sarah Johnson",
+          email: "sarah.j@example.com",
+          phone: "+1 (555) 123-4567",
+          company: "Tech Corp",
+          status: "active",
+        },
+        {
+          id: 2,
+          name: "Michael Chen",
+          email: "mchen@example.com",
+          phone: "+1 (555) 234-5678",
+          company: "Innovation Labs",
+          status: "active",
+        },
+        {
+          id: 3,
+          name: "Emma Davis",
+          email: "emma.d@example.com",
+          phone: "+1 (555) 345-6789",
+          company: "Design Studio",
+          status: "pending",
+        },
+        {
+          id: 4,
+          name: "James Wilson",
+          email: "jwilson@example.com",
+          phone: "+1 (555) 456-7890",
+          company: "Startup Inc",
+          status: "active",
+        },
+        {
+          id: 5,
+          name: "Lisa Anderson",
+          email: "lisa.a@example.com",
+          phone: "+1 (555) 567-8901",
+          company: "Enterprise Co",
+          status: "pending",
+        },
+      ];
+
+      // Get initials from name
+      function getInitials(name) {
+        return name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase();
+      }
+
+      // Get random color for avatar
+      function getAvatarColor(id) {
+        const colors = [
+          "var(--p-primary)",
+          "var(--p-success)",
+          "var(--p-info)",
+          "var(--p-warning)",
+        ];
+        return colors[id % colors.length];
+      }
+
+      // Render contacts
+      function renderContacts() {
+        const container = document.getElementById("contactListAll");
+        container.innerHTML = contacts
+          .map(
+            (contact) => `
+        <div class="contact-item">
+          <div class="contact-avatar">
+            <div class="p-avatar p-avatar-lg" style="background: ${getAvatarColor(
+              contact.id
+            )};">
+              ${getInitials(contact.name)}
+            </div>
+          </div>
+          <div class="contact-info">
+            <div class="contact-name">${contact.name}</div>
+            <div class="contact-details">
+              <i class="fas fa-envelope"></i> ${contact.email} •
+              <i class="fas fa-phone"></i> ${contact.phone} •
+              <i class="fas fa-building"></i> ${contact.company}
+            </div>
+          </div>
+          <div class="p-mr-3">
+            <span class="p-badge ${
+              contact.status === "active"
+                ? "p-badge-success"
+                : "p-badge-warning"
+            }">
+              ${contact.status}
+            </span>
+          </div>
+          <div class="contact-actions">
+            <button class="p-btn-icon" onclick="editContact(${
+              contact.id
+            })" aria-label="Edit contact">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="p-btn-icon p-btn-icon-danger" onclick="deleteContact(${
+              contact.id
+            })" aria-label="Delete contact">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `
+          )
+          .join("");
+
+        updateStats();
+      }
+
+      // Update statistics
+      function updateStats() {
+        document.getElementById("totalContacts").textContent = contacts.length;
+        document.getElementById("activeContacts").textContent = contacts.filter(
+          (c) => c.status === "active"
+        ).length;
+        document.getElementById("pendingContacts").textContent =
+          contacts.filter((c) => c.status === "pending").length;
+        document.getElementById("weekContacts").textContent = Math.floor(
+          contacts.length / 2
+        );
+      }
+
+      // Modal functions
+      function openAddContactModal() {
+        document.getElementById("addContactModal").classList.add("active");
+      }
+
+      function closeAddContactModal() {
+        document.getElementById("addContactModal").classList.remove("active");
+        // Clear form
+        document.getElementById("contactName").value = "";
+        document.getElementById("contactEmail").value = "";
+        document.getElementById("contactPhone").value = "";
+        document.getElementById("contactCompany").value = "";
+        document.getElementById("contactStatus").value = "active";
+      }
+
+      // Add contact
+      function addContact() {
+        const name = document.getElementById("contactName").value;
+        const email = document.getElementById("contactEmail").value;
+        const phone = document.getElementById("contactPhone").value;
+        const company = document.getElementById("contactCompany").value;
+        const status = document.getElementById("contactStatus").value;
+
+        if (!name || !email) {
+          showToast("Please fill in required fields", "error");
+          return;
+        }
+
+        const newContact = {
+          id: contacts.length + 1,
+          name,
+          email,
+          phone,
+          company,
+          status,
+        };
+
+        contacts.push(newContact);
+        renderContacts();
+        closeAddContactModal();
+        showToast("Contact added successfully!", "success");
+      }
+
+      // Edit contact
+      function editContact(id) {
+        const contact = contacts.find((c) => c.id === id);
+        showToast(`Edit functionality for ${contact.name}`, "info");
+      }
+
+      // Delete contact
+      function deleteContact(id) {
+        const contact = contacts.find((c) => c.id === id);
+        if (confirm(`Are you sure you want to delete ${contact.name}?`)) {
+          contacts = contacts.filter((c) => c.id !== id);
+          renderContacts();
+          showToast("Contact deleted successfully", "success");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        await applyInstanceColor();
+        initializeTabs();
+        renderContacts();
+        console.log("Pitcher UI Demo App initialized");
+      });
+    </script>
+  </body>
+</html>
