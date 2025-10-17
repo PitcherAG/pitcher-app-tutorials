@@ -58,9 +58,9 @@ source ~/.bash_profile && publish_pitcher_app
 
 ```
 pitcher-ui-demo/
-├── app.json              # App configuration
-├── dist/
-│   └── index.html        # Main application file
+├── app.json             # App configuration
+
+├── index.html           # Main application file
 └── README.md            # This file
 ```
 
@@ -182,7 +182,7 @@ Open browser DevTools to see these logs.
 
 ### Testing in Browser
 
-You can open `dist/index.html` directly in a browser to test the UI. Note that Pitcher API features (instance colors, toast notifications) will only work when embedded in Pitcher.
+You can open `index.html` directly in a browser to test the UI. Note that Pitcher API features (instance colors, toast notifications) will only work when embedded in Pitcher.
 
 ## Component Reference
 
@@ -202,7 +202,7 @@ All components used in this app are documented in the Pitcher UI Framework:
 
 For issues or questions about:
 - **The UI Framework**: Check `@pitcher/css` documentation
-- **This demo app**: See code comments in `dist/index.html`
+- **This demo app**: See code comments in `index.html`
 - **Pitcher Platform**: Refer to Pitcher documentation
 
 ## License
