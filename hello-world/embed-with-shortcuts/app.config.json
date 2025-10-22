@@ -14,13 +14,55 @@
       ]
     },
     {
-      "label": "Canvas Content Settings",
+      "label": "Message Content Settings",
       "fields": [
         {
           "type": "checkbox",
-          "name": "include_canvas_content",
-          "label": "Include Canvas Content",
-          "help_text": "Send full canvas content to iframe (if disabled, only metadata & context are sent)",
+          "name": "send_everything",
+          "label": "Send Everything",
+          "help_text": "Send everything to iframe (if disabled, only context values are sent)",
+          "is_required": false,
+          "is_filterable": false,
+          "default_value": false
+        }
+      ]
+    },
+    {
+      "label": "Custom Context Fields",
+      "fields": [
+        {
+          "type": "text",
+          "name": "context_fields",
+          "label": "Context Fields (JSON)",
+          "help_text": "Define which context fields to send to iframe (JSON array format). Supports dot notation for nested properties. Examples: [\"wizard\", \"SelectedAccount\", \"Account\"] or [\"SelectedAccount.Name\", \"SelectedAccount.Id\", \"wizard.step\"]. Leave empty to use defaults.",
+          "is_required": false,
+          "is_filterable": false,
+          "default_value": ""
+        }
+      ]
+    },
+    {
+      "label": "Data Transform Function",
+      "fields": [
+        {
+          "type": "text",
+          "name": "transform_function",
+          "label": "Transform Function (JavaScript)",
+          "help_text": "Optional JavaScript function to transform canvas data before sending to iframe. Function receives the full data object and should return the transformed object. Example: (data) => ({ id: data.canvas.id, name: data.canvas.name, accountName: data.canvas.context?.SelectedAccount?.Name }). Leave empty to use default behavior.",
+          "is_required": false,
+          "is_filterable": false,
+          "default_value": ""
+        }
+      ]
+    },
+    {
+      "label": "Debug Settings",
+      "fields": [
+        {
+          "type": "checkbox",
+          "name": "debug_mode",
+          "label": "Debug Mode",
+          "help_text": "Show message queue and iframe status overlay for debugging",
           "is_required": false,
           "is_filterable": false,
           "default_value": false

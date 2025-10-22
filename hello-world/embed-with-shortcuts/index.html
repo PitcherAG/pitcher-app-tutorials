@@ -4,175 +4,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+  <title>Canvas App Passthrough</title>
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- External dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api@beta"></script>
   <script src="https://cdn.jsdelivr.net/npm/@pitcher/theme"></script>
   <script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 </head>
 
-<body style="margin: 0; padding: 0; overflow: hidden">
-  <script>
-    const api = pitcher.useApi();
-    const uiApi = pitcher.useUi();
-    window.api = api;
-    let env = {};
-    let instanceID = "";
-    let currentCanvas = null;
-    let appConfig = null;
-
-    // Function to process URL with Handlebars template
-    function processUrlWithContext(urlTemplate, context) {
-      try {
-        // Compile the Handlebars template
-        const template = Handlebars.compile(urlTemplate);
-        // Process the template with the canvas context
-        return template(context);
-      } catch (error) {
-        console.error("Error processing URL template:", error);
-        return urlTemplate; // Return original URL if template processing fails
-      }
-    }
-    const onIframeMessage = async (message) => {
-      const { type, body: { action = null, data = null } = {} } =
-        message.data;
-      try {
-        if (message.data.event.type == "canvas_updated") {
-          console.log("canvas updated");
-          api
-            .getCanvas({ id: window.pitcherData.canvas.id })
-            .then(function (result) {
-              console.log(result);
-              window.pitcherData.canvas = result;
-              const canvasData = { ...result };
-              if (!appConfig?.include_canvas_content) {
-                delete canvasData.content;
-              }
-              const iframe = document.getElementById("targetFrame");
-
-              iframe.contentWindow.postMessage(
-                {
-                  type: "CANVAS_DATA",
-                  canvas: canvasData,
-                },
-                "*"
-              );
-            });
-        }
-      } catch (error) { }
-
-      if (type === "IFRAME_DATA_MESSAGE" && action) {
-        if (action === "set_data") {
-          window.pitcherData = data;
-          currentCanvas = window.pitcherData.canvas;
-          api.getEnv().then(function (result) {
-            window.env = result;
-            api
-              .getAppConfig()
-              .then(function (result) {
-                appConfig = result;
-                let iframeUrl = result.url;
-                if (data.settings?.url) {
-                  iframeUrl = data.settings.url;
-                }
-                if (iframeUrl) {
-                  // Process URL with canvas context using Handlebars
-                  const processedUrl = processUrlWithContext(
-                    iframeUrl,
-                    data.canvas?.context || {}
-                  );
-                  console.log("Original URL:", iframeUrl);
-                  console.log("Canvas context:", data.canvas?.context);
-                  console.log("Processed URL:", processedUrl);
-
-                  document.body.innerHTML = `<iframe id="targetFrame" src="${processedUrl}" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; margin: 0; padding: 0;" frameborder="0" seamless></iframe>`;
-
-                  // Wait for iframe to load then send canvas data
-                  const iframe = document.getElementById("targetFrame");
-                  iframe.onload = function () {
-                    if (currentCanvas) {
-                      // Create a copy of canvas
-                      const canvasData = { ...currentCanvas };
-                      if (!appConfig?.include_canvas_content) {
-                        delete canvasData.content;
-                      }
-
-                      iframe.contentWindow.postMessage(
-                        {
-                          type: "CANVAS_DATA",
-                          canvas: canvasData,
-                        },
-                        "*"
-                      );
-                    }
-                  };
-                } else {
-                  document.body.innerHTML = `
-										<div style="padding: 20px; font-family: Arial, sans-serif;">
-											<h1>No iFrame URL provided</h1>
-											<h2>How to use Handlebars templates with canvas context:</h2>
-											<p>You can use Handlebars syntax in your iframe URL to inject canvas context values dynamically.</p>
-											<h3>Example URLs:</h3>
-											<ul style="line-height: 2;">
-												<li><code>https://www.google.com/search?q={{SelectedAccount.Name}}</code> - Search for account name</li>
-												<li><code>https://example.com/account/{{SelectedAccount.Id}}</code> - Use account ID in path</li>
-												<li><code>https://crm.example.com/lead?id={{SelectedLead.Id}}&amp;status={{SelectedLead.Status}}</code> - Multiple parameters</li>
-												<li><code>https://maps.google.com/search/{{SelectedAccount.Address}}</code> - Use address field</li>
-												<li><code>https://analytics.example.com/report?company={{SelectedAccount.Name}}&amp;owner={{SelectedAccount.Owner}}</code> - Multiple context fields</li>
-											</ul>
-											<h3>Available context variables depend on your canvas configuration:</h3>
-											<ul>
-												<li>SelectedAccount.* (Name, Id, Address, Owner, etc.)</li>
-												<li>SelectedContact.* (Name, Email, Phone, etc.)</li>
-												<li>SelectedLead.* (Id, Status, etc.)</li>
-												<li>SelectedOpportunity.* (Name, Amount, Stage, etc.)</li>
-												<li>Any other objects configured in your canvas context</li>
-											</ul>
-											<p style="margin-top: 20px;"><strong>Configure the URL in canvas settings to enable iframe passthrough.</strong></p>
-										</div>
-									`;
-                }
-              });
-          });
-        }
-        if (action === "canvas_updated") {
-          window.pitcherData = data;
-          currentCanvas = window.pitcherData.canvas;
-
-          // Send updated canvas data to iframe
-          const iframe = document.getElementById("targetFrame");
-          if (iframe && iframe.contentWindow && currentCanvas) {
-            // Create a copy of canvas
-            const canvasData = { ...currentCanvas };
-            if (!appConfig?.include_canvas_content) {
-              delete canvasData.content;
-            }
-
-            iframe.contentWindow.postMessage(
-              {
-                type: "CANVAS_DATA",
-                canvas: canvasData,
-              },
-              "*"
-            );
-          }
-        }
-      }
-    };
-    document.addEventListener("DOMContentLoaded", function () {
-      window.parent.postMessage(
-        {
-          type: "IFRAME_DATA_MESSAGE",
-          body: {
-            action: "iframe_loaded",
-            data: {},
-          },
-        },
-        "*"
-      );
-    });
-
-    window.addEventListener("message", onIframeMessage);
-    window.pitcherData = {};
-  </script>
+<body>
+  <!-- Main application logic -->
+  <script src="app.js"></script>
 </body>
 
 </html>
