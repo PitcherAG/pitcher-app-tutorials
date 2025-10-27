@@ -32,7 +32,7 @@
       "fields": [
         {
           "type": "text",
-          "name": "context_fields",
+          "name": "code_json_context_fields",
           "label": "Context Fields (JSON)",
           "help_text": "Define which context fields to send to iframe (JSON array format). Supports dot notation for nested properties. Examples: [\"wizard\", \"SelectedAccount\", \"Account\"] or [\"SelectedAccount.Name\", \"SelectedAccount.Id\", \"wizard.step\"]. Leave empty to use defaults.",
           "is_required": false,
@@ -46,9 +46,9 @@
       "fields": [
         {
           "type": "text",
-          "name": "transform_function",
+          "name": "code_javascript_transform_function",
           "label": "Transform Function (JavaScript)",
-          "help_text": "Optional JavaScript function to transform canvas data before sending to iframe. Function receives the full data object and should return the transformed object. Example: (data) => ({ id: data.canvas.id, name: data.canvas.name, accountName: data.canvas.context?.SelectedAccount?.Name }). Leave empty to use default behavior.",
+          "help_text": "Optional JavaScript function to transform canvas data before sending to iframe. Function receives the full data object and should return the transformed object. Example: (data) => ({ id: data.id, name: data.name, accountName: data.context?.SelectedAccount?.Name }). Leave empty to use default behavior.",
           "is_required": false,
           "is_filterable": false,
           "default_value": ""

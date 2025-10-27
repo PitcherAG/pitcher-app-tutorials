@@ -453,16 +453,16 @@ function setNestedValue(obj, path, value) {
 // Build canvas data object based on app config
 function buildCanvasData(result) {
   // Check if a custom transform function is provided
-  if (appConfig?.transform_function) {
+  if (appConfig?.code_javascript_transform_function) {
     try {
       // Eval the transform function and apply it
-      const transformFn = eval(`(${appConfig.transform_function})`);
+      const transformFn = eval(`(${appConfig.code_javascript_transform_function})`);
       const transformed = transformFn(result);
       console.log('Applied transform function to canvas data');
       return transformed;
     } catch (error) {
       console.error('Error applying transform function:', error);
-      console.error('Transform function:', appConfig.transform_function);
+      console.error('Transform function:', appConfig.code_javascript_transform_function);
       // Fall through to default behavior on error
     }
   }
@@ -488,9 +488,9 @@ function buildCanvasData(result) {
   let contextFields = null;
 
   // Try to parse custom context fields from config
-  if (appConfig?.context_fields) {
+  if (appConfig?.code_json_context_fields) {
     try {
-      const parsedFields = JSON.parse(appConfig.context_fields);
+      const parsedFields = JSON.parse(appConfig.code_json_context_fields);
       if (Array.isArray(parsedFields) && parsedFields.length > 0) {
         contextFields = {};
         parsedFields.forEach(field => {
@@ -513,7 +513,7 @@ function buildCanvasData(result) {
         });
       }
     } catch (error) {
-      console.error("Error parsing context_fields configuration:", error);
+      console.error("Error parsing code_json_context_fields configuration:", error);
       // Fall back to defaults
     }
   }
@@ -556,6 +556,7 @@ const onIframeMessage = async (message) => {
           sendToIframe({
             type: "CANVAS_DATA",
             canvas: buildCanvasData(result),
+            state: window.pitcherData.state,
           });
         });
     }
@@ -622,6 +623,7 @@ const onIframeMessage = async (message) => {
                   sendToIframe({
                     type: "CANVAS_DATA",
                     canvas: buildCanvasData(latestCanvas),
+                    state: window.pitcherData.state,
                   });
                 }
               };
@@ -694,6 +696,7 @@ const onIframeMessage = async (message) => {
         sendToIframe({
           type: "CANVAS_DATA",
           canvas: buildCanvasData(currentCanvas),
+          state: window.pitcherData.state,
         });
       }
     }
