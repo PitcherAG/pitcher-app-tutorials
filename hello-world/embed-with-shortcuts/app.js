@@ -556,7 +556,7 @@ const onIframeMessage = async (message) => {
           sendToIframe({
             type: "CANVAS_DATA",
             canvas: buildCanvasData(result),
-            state: window.pitcherData.state,
+            state: window.env.state,
           });
         });
     }
@@ -623,7 +623,7 @@ const onIframeMessage = async (message) => {
                   sendToIframe({
                     type: "CANVAS_DATA",
                     canvas: buildCanvasData(latestCanvas),
-                    state: window.pitcherData.state,
+                    state: window.env.state,
                   });
                 }
               };
@@ -696,7 +696,7 @@ const onIframeMessage = async (message) => {
         sendToIframe({
           type: "CANVAS_DATA",
           canvas: buildCanvasData(currentCanvas),
-          state: window.pitcherData.state,
+          state: window.env.state,
         });
       }
     }
