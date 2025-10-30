@@ -102,7 +102,7 @@ function resetIframeState() {
 // Function to set debug colors based on instance color
 function setDebugColors() {
   const instanceColor = window.env?.instance?.color || '#00ffff';
-  
+
   // Convert hex to RGB
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -112,9 +112,9 @@ function setDebugColors() {
       b: parseInt(result[3], 16)
     } : { r: 0, g: 255, b: 255 };
   };
-  
+
   const rgb = hexToRgb(instanceColor);
-  
+
   // Set CSS custom properties
   document.documentElement.style.setProperty('--debug-color', instanceColor);
   document.documentElement.style.setProperty('--debug-color-shadow', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`);
@@ -141,7 +141,7 @@ function createDebugTrigger() {
   trigger.className = 'debug-trigger';
   trigger.title = 'Triple-click to toggle debug mode';
 
-  trigger.addEventListener('click', function(e) {
+  trigger.addEventListener('click', function (e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -255,7 +255,7 @@ function updateDebugPanel() {
   if (!content) return;
 
   const now = new Date().toLocaleTimeString();
-  
+
   // Get instance color for inline styles
   const instanceColor = window.env?.instance?.color || '#0ff';
 
@@ -372,7 +372,7 @@ function showMessageDetails(historyIndex) {
   modal.className = 'debug-modal';
 
   const messageJson = JSON.stringify(entry.message, null, 2);
-  
+
   // Get instance color for inline styles
   const instanceColor = window.env?.instance?.color || '#0ff';
 
@@ -588,12 +588,17 @@ const onIframeMessage = async (message) => {
             }
             if (iframeUrl) {
               // Process URL with canvas context using Handlebars
-              const processedUrl = processUrlWithContext(
-                iframeUrl,
-                data.canvas?.context || {}
-              );
+              const canvasData = data.canvas || {};
+              const handlebarsContext = {
+                ...canvasData.context || {},  // Spread context properties at top level for backward compatibility ({{SelectedAccount.Name}})
+                metadata: canvasData.metadata || {},  // Canvas metadata fields
+                context: canvasData.context || {},  // Also keep context object for explicit access ({{context.SelectedAccount.Name}})
+                state: window.env.state || {},  // Include state data
+                ...window.env.state || {}  // Also spread state at top level for easier access
+              };
+              const processedUrl = processUrlWithContext(iframeUrl, handlebarsContext);
               console.log("Original URL:", iframeUrl);
-              console.log("Canvas context:", data.canvas?.context);
+              console.log("Handlebars context:", handlebarsContext);
               console.log("Processed URL:", processedUrl);
 
               // Reset iframe state before creating new iframe
@@ -654,23 +659,23 @@ const onIframeMessage = async (message) => {
               document.body.innerHTML = `
 								<div class="no-url-message">
 									<h1>No iFrame URL provided</h1>
-									<h2>How to use Handlebars templates with canvas context:</h2>
-									<p>You can use Handlebars syntax in your iframe URL to inject canvas context values dynamically.</p>
+									<h2>How to use Handlebars templates with canvas data:</h2>
+									<p>You can use Handlebars syntax in your iframe URL to inject canvas data, context, and state values dynamically.</p>
 									<h3>Example URLs:</h3>
 									<ul style="line-height: 2;">
-										<li><code>https://www.google.com/search?q={{SelectedAccount.Name}}</code> - Search for account name</li>
-										<li><code>https://example.com/account/{{SelectedAccount.Id}}</code> - Use account ID in path</li>
-										<li><code>https://crm.example.com/lead?id={{SelectedLead.Id}}&amp;status={{SelectedLead.Status}}</code> - Multiple parameters</li>
-										<li><code>https://maps.google.com/search/{{SelectedAccount.Address}}</code> - Use address field</li>
-										<li><code>https://analytics.example.com/report?company={{SelectedAccount.Name}}&amp;owner={{SelectedAccount.Owner}}</code> - Multiple context fields</li>
+										<li><code>https://example.com/canvas?field={{metadata.customField}}</code> - Use canvas metadata field</li>
+										<li><code>https://www.google.com/search?q={{context.SelectedAccount.Name}}</code> - Search for account name</li>
+										<li><code>https://example.com/account/{{context.SelectedAccount.Id}}</code> - Use account ID from context</li>
+										<li><code>https://crm.example.com/lead?id={{context.SelectedLead.Id}}&amp;status={{context.SelectedLead.Status}}</code> - Multiple context parameters</li>
+										<li><code>https://analytics.example.com/report?company={{context.SelectedAccount.Name}}&amp;user={{state.user.name}}</code> - Mix context and state</li>
 									</ul>
-									<h3>Available context variables depend on your canvas configuration:</h3>
+									<h3>Available variables in Handlebars templates:</h3>
 									<ul>
-										<li>SelectedAccount.* (Name, Id, Address, Owner, etc.)</li>
-										<li>SelectedContact.* (Name, Email, Phone, etc.)</li>
-										<li>SelectedLead.* (Id, Status, etc.)</li>
-										<li>SelectedOpportunity.* (Name, Amount, Stage, etc.)</li>
-										<li>Any other objects configured in your canvas context</li>
+										<li><strong>Canvas fields:</strong> {{id}}, {{name}}, {{template}}, {{created_by}}, {{created_at}}, {{updated_at}}, {{updated_by}}</li>
+										<li><strong>Canvas metadata:</strong> {{metadata.customField}} - Access custom metadata fields</li>
+										<li><strong>Canvas context:</strong> {{context.SelectedAccount.*}}, {{context.SelectedContact.*}}, {{context.SelectedLead.*}}, {{context.SelectedOpportunity.*}}</li>
+										<li><strong>Application state:</strong> {{state.*}} - Any state variables from window.env.state</li>
+										<li><strong>Backward compatibility:</strong> Top-level context access like {{SelectedAccount.*}} still works</li>
 									</ul>
 									<p style="margin-top: 20px;"><strong>Configure the URL in canvas settings to enable iframe passthrough.</strong></p>
 								</div>
