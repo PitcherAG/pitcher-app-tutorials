@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api@1.26.0-beta.6"></script>
+  </head>
+
+  <body class="min-h-screen flex items-center justify-center">
+    <script>
+      const api = pitcher.useApi();
+      const uiApi = pitcher.useUi();
+      let env = {};
+      let currentCanvas = null;
+
+      // API Configuration - replace with your integration server URL
+      const API_BASE_URL = "https://your-integration-server.example.com";
+
+      /**
+       * Fetch financial data from authenticated API server
+       *
+       * Authentication:
+       * - DSR context (client_type: 'dsr'): Uses SharedLink JWT from env.pitcher.access_token
+       * - Admin/Rep context: Uses Bearer token from env.pitcher.access_token
+       *
+       * Benefits:
+       * - Works in both DSR and admin/rep contexts
+       * - Secure JWT validation on server side via Pitcher platform
+       * - No API key exposure in frontend
+       * - Automatic caching for better performance
+       * - Centralized rate limit management
+       */
+      const fetchFinancialData = async () => {
+        try {
+          const accessToken = env?.pitcher?.access_token;
+
+          if (!accessToken) {
+            throw new Error(
+              "No authentication available. Please ensure you are logged in or accessing via shared link."
+            );
+          }
+
+          // Example tickers for demo (can be configured via canvas context)
+          const tickers = ["AAPL", "MSFT", "GOOGL", "AMZN"];
+
+          // Determine auth header type based on client type
+          const isDsrContext = env?.client_type === "dsr";
+          const authHeader = isDsrContext
+            ? `SharedLink ${accessToken}`
+            : `Bearer ${accessToken}`;
+
+          console.log(
+            "Fetching financial data with auth type:",
+            isDsrContext ? "SharedLink JWT (DSR)" : "Bearer token"
+          );
+
+          // Fetch data from authenticated API server
+          const response = await fetch(
+            `${API_BASE_URL}/api/financial-data?tickers=${tickers.join(",")}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: authHeader,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              throw new Error(
+                "Authentication failed. Please log in again or check shared link access."
+              );
+            }
+            throw new Error(`API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          return data;
+        } catch (error) {
+          console.error("Error fetching financial data:", error);
+          throw error;
+        }
+      };
+
+      const onIframeMessage = async (message) => {
+        const { type, body: { action = null, data = null } = {} } =
+          message.data;
+
+        if (type === "IFRAME_DATA_MESSAGE" && action) {
+          if (action === "canvas_updated") {
+            window.pitcherData = data;
+            let firstTime = false;
+
+            if (!currentCanvas) {
+              firstTime = true;
+            }
+
+            currentCanvas = data.canvas;
+
+            // Skip if template, block, or section
+            if (
+              currentCanvas.is_template ||
+              currentCanvas.is_block ||
+              currentCanvas.is_section
+            ) {
+              return;
+            }
+
+            if (firstTime) {
+              api.getEnv().then(async function (result) {
+                // Update both window.env and global env variable
+                window.env = result;
+                env = result;
+
+                try {
+                  if (env?.client_type !== "dsr")
+                    uiApi.toast({
+                      message: "Fetching real-time financial market data...",
+                      type: "info",
+                      duration: 2000,
+                    });
+
+                  // Fetch financial data
+                  const financialData = await fetchFinancialData();
+
+                  // Create context with financial data
+                  const context = {
+                    financial_data: financialData,
+                  };
+
+                  // CRITICAL: Use no_persist flag to keep data in memory only
+                  // This ensures sensitive financial data is never stored in the database
+                  const updateObject = {
+                    context: context,
+                    no_persist: true,
+                  };
+
+                  api
+                    .broadcast({
+                      type: "canvas_updated",
+                      body: updateObject,
+                    })
+                    .then(function (result) {
+                      if (env?.client_type !== "dsr")
+                        uiApi.toast({
+                          message: `Canvas populated with financial data (${financialData.stock_quotes.length} stock quotes, market indices)`,
+                          type: "success",
+                          duration: 3000,
+                        });
+                    });
+                } catch (exc) {
+                  console.error(
+                    "Error populating canvas with financial data:",
+                    exc
+                  );
+                  if (env?.client_type !== "dsr")
+                    uiApi.toast({
+                      message:
+                        "Failed to fetch financial data. Please try again.",
+                      type: "error",
+                      duration: 4000,
+                    });
+                }
+              });
+            }
+          }
+        }
+      };
+
+      // Notify parent that iframe is loaded
+      document.addEventListener("DOMContentLoaded", function () {
+        window.parent.postMessage(
+          {
+            type: "IFRAME_DATA_MESSAGE",
+            body: {
+              action: "iframe_loaded",
+              data: {},
+            },
+          },
+          "*"
+        );
+      });
+
+      window.addEventListener("message", onIframeMessage);
+      window.pitcherData = {};
+    </script>
+  </body>
+</html>

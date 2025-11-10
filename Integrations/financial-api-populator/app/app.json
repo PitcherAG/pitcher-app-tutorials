@@ -1,0 +1,17 @@
+{
+  "name": "financial-api-populator",
+  "type": "web",
+  "version": "2025.11.06.1762430838788",
+  "description": "Fetches real-time financial and stock market data from public APIs and injects into canvas context without persisting to database",
+  "displayName": "Financial Data Real-Time Populator",
+  "hooks": {
+    "canvas": {
+      "on_canvas_update": {
+        "entry": "populator.html",
+        "dsr": true
+      }
+    }
+  },
+  "icon": "fas fa-chart-line",
+  "display_name": "Financial Data Real-Time Populator"
+}
