@@ -1,0 +1,20 @@
+{
+  "name": "canvas-header-overview",
+  "type": "web",
+  "version": "2025.12.08.1765204764081",
+  "description": "Canvas builder header with stats overview and daily communication updates",
+  "display_name": "Canvas Header Overview",
+  "module": {
+    "canvas": {
+      "enabled": true,
+      "auto_install": false,
+      "defaults": {
+        "dimensions": {
+          "width": "100%",
+          "height": "768px"
+        }
+      }
+    }
+  },
+  "icon": "fas fa-chart-line"
+}

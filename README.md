@@ -41,6 +41,12 @@ Examples for multimedia and content selection:
 
 - **[Content Selector](multimedia-selector-apps/content-selector/)**: Content selection interface
 
+### Canvas Embedded Apps
+
+Examples for building apps embedded in Canvas:
+
+- **[Canvas Header Overview](canvas-header-overview/)**: Dashboard with goals, cycle plan, and communication updates. Demonstrates JS API usage, Canvas communication via js api events, and dynamic theming.
+
 ### Web File Apps
 
 Examples for web file applications:

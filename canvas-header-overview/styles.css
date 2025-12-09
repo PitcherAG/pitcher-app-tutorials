@@ -1,0 +1,10 @@
+/* Minimal styles - Tailwind handles most */
+
+:root {
+  --primary-color: #0057b8;
+}
+
+/* Loading spinner border width fix (Tailwind border-3 doesn't exist) */
+#loading > div {
+  border-width: 3px;
+}
