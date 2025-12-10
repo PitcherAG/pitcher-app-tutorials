@@ -232,13 +232,18 @@ async function init() {
     let primaryColor = "#0057B8"; // Default
 
     try {
+      pitcher.useUi().appLoaded();
+      pitcher.useUi().onAppSetData((data) => {
+        // adapt the UI according to the sfdc data etc.
+        console.log("[UI] App set data hook:", data);
+      });
       console.log("[API] Calling getEnv()...");
       const env = await pitcher.useApi().getEnv();
       console.log("[API] getEnv response:", env);
       if (env?.instance_color) {
         primaryColor = env.instance_color;
       }
-      console.log("[API] Running in", env?.context || "unknown", "context");
+      console.log("[API] Running in", env?.mode || "unknown", "context");
     } catch (e) {
       console.log("[API] Could not fetch environment, using default color:", e);
     }
