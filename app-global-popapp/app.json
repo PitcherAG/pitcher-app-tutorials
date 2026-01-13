@@ -1,0 +1,16 @@
+{
+  "name": "app-global-popapp",
+  "display_name": "App Global Popup",
+  "description": "An example app demonstrating the ui-global-popup feature. Open via window.openGlobalPopup('global-popapp-example')",
+  "version": "0.0.1",
+  "type": "web",
+  "icon": "far fa-globe",
+  "app_type": "ui-global-popup",
+  "app_options": {
+    "dimensions": {
+      "width": "100vw",
+      "height": "100vh"
+    },
+    "placement": "center"
+  }
+}

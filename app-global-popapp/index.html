@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Popup Example</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pitcher/theme/dist/theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #333;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px 32px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header h1 i {
+      color: #667eea;
+    }
+
+    .content {
+      flex: 1;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 i {
+      color: #667eea;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 8px;
+    }
+
+    .info-item label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-item .value {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    .context-data {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+      max-height: 300px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd6;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #e9ecef;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #dee2e6;
+    }
+
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #d4edda;
+      color: #155724;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>
+      <i class="fa-solid fa-globe"></i>
+      Global Popup App Example
+    </h1>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <h2><i class="fa-solid fa-circle-check"></i> Status</h2>
+      <div class="success-badge">
+        <i class="fa-solid fa-check"></i>
+        Global popup is working!
+      </div>
+      <p style="margin-top: 12px; color: #666;">
+        This app was opened via <code>window.openGlobalPopup('global-popapp-example')</code>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-circle-info"></i> Environment Info</h2>
+      <div class="info-grid" id="env-info">
+        <div class="info-item">
+          <label>Loading...</label>
+          <div class="value">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-database"></i> Context Data Received</h2>
+      <div class="context-data" id="context-data">Loading...</div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-gear"></i> Actions</h2>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="closePopup()">
+          <i class="fa-solid fa-xmark"></i>
+          Close Popup
+        </button>
+        <button class="btn btn-secondary" onclick="sendCallback()">
+          <i class="fa-solid fa-paper-plane"></i>
+          Send Callback & Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let contextData = {}
+    let popupCallback = null
+
+    // This function is called by slotty-ui when the popup opens
+    window.initialize = function(data, callback) {
+      console.log('[GlobalPopupExample] Initialize called with:', data)
+
+      contextData = data || {}
+      popupCallback = callback
+
+      // Display context data
+      document.getElementById('context-data').textContent =
+        JSON.stringify(contextData, null, 2)
+
+      // Display environment info
+      const envInfo = document.getElementById('env-info')
+      const items = [
+        { label: 'Embed Location', value: contextData.embed_location || 'N/A' },
+        { label: 'Instance', value: contextData.env?.instance_id || 'N/A' },
+        { label: 'User', value: contextData.env?.user?.email || 'N/A' },
+        { label: 'Call ID', value: contextData.call?.selectedAccount?.Id || 'No active call' },
+        { label: 'Canvas', value: contextData.opened_canvas?.name || 'None' },
+      ]
+
+      envInfo.innerHTML = items.map(item => `
+        <div class="info-item">
+          <label>${item.label}</label>
+          <div class="value">${item.value}</div>
+        </div>
+      `).join('')
+    }
+
+    function closePopup() {
+      if (popupCallback) {
+        popupCallback()
+      }
+    }
+
+    function sendCallback() {
+      if (popupCallback) {
+        popupCallback({
+          action: 'completed',
+          timestamp: new Date().toISOString(),
+          message: 'User clicked send callback'
+        })
+      }
+    }
+  </script>
+</body>
+</html>
