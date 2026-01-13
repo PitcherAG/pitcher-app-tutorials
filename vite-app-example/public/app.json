@@ -1,0 +1,20 @@
+{
+  "name": "canvas-sales-dashboard",
+  "type": "web",
+  "version": "1.0.0",
+  "description": "Canvas Sales Dashboard - Sales reports translated from Veeva to Pitcher",
+  "display_name": "Sales Dashboard",
+  "icon": "fas fa-chart-bar",
+  "online_only": false,
+  "module": {
+    "canvas": {
+      "enabled": true,
+      "defaults": {
+        "dimensions": {
+          "width": "100%",
+          "height": "600px"
+        }
+      }
+    }
+  }
+}
