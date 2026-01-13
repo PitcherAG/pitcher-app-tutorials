@@ -229,8 +229,8 @@
       const envInfo = document.getElementById('env-info')
       const items = [
         { label: 'Embed Location', value: contextData.embed_location || 'N/A' },
-        { label: 'Instance', value: contextData.env?.instance_id || 'N/A' },
-        { label: 'User', value: contextData.env?.user?.email || 'N/A' },
+        { label: 'Instance', value: contextData.env?.pitcher?.instance?.id || 'N/A' },
+        { label: 'User', value: contextData.env?.pitcher?.user?.email || 'N/A' },
         { label: 'Call ID', value: contextData.call?.selectedAccount?.Id || 'No active call' },
         { label: 'Canvas', value: contextData.opened_canvas?.name || 'None' },
       ]
