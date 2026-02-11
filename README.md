@@ -53,6 +53,7 @@ Examples for web file applications:
 
 - **[SFDC Querying in Web File](web-file-apps/sfdc-quering-in-web-file/)**: Salesforce data querying within web files
 - **[Simple SFDC and Call Data in Web File](web-file-apps/simple-sfdc-and-call-data-in-web-file/)**: Combining Salesforce and call data
+- **[List and Open Files](web-file-apps/list-and-open-files/)**: Browse and open files (videos, PDFs, etc.) stored in Pitcher from HTML5 content
 
 ## Project Structure
 

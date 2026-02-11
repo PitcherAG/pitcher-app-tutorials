@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pitcher API Demo — List &amp; Open Files</title>
+    <script src="https://cdn.jsdelivr.net/npm/@pitcher/js-api"></script>
+    <style>
+      * { box-sizing: border-box; margin: 0 }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 20px;
+        color: #1a1a1a;
+        background: #fafafa;
+      }
+      h1 { font-size: 20px; margin-bottom: 4px }
+      .subtitle { color: #666; font-size: 14px; margin-bottom: 24px }
+      section { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin-bottom: 20px }
+      h2 { font-size: 15px; margin-bottom: 12px; color: #444 }
+      pre {
+        background: #f5f5f5;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 14px;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-x: auto;
+      }
+      code { font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace }
+      .comment { color: #6a737d }
+      #status, #select-status { font-size: 13px; color: #666; margin-bottom: 12px }
+      #files { list-style: none; padding: 0 }
+      #files li {
+        padding: 10px 12px;
+        border: 1px solid #e5e5e5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      #files li:hover { border-color: #1976d2; background: #f0f7ff }
+      .meta { font-size: 12px; color: #888; margin-top: 2px }
+      button {
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #fff;
+        background: #1976d2;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      button:hover { background: #1565c0 }
+      #selection-result { list-style: none; padding: 0; margin-top: 12px }
+      #selection-result:empty { display: none }
+      #selection-result li {
+        padding: 10px 12px;
+        border: 1px solid #e5e5e5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      #selection-result li:hover { border-color: #1976d2; background: #f0f7ff }
+    </style>
+  </head>
+  <body>
+    <h1>Pitcher API Demo</h1>
+    <p class="subtitle">List files, open them, or pick from a native modal.</p>
+
+    <!-- Section A: The code behind this demo -->
+    <section>
+      <h2>The Code</h2>
+      <pre><code><span class="comment">// 1. Initialize</span>
+const api = pitcher.useApi()
+const env = await api.getEnv()
+
+<span class="comment">// 2. List files</span>
+const { results, count } = await api.getFiles({
+  instance_id: env.pitcher.instance.id,
+  page_size: 10
+})
+
+<span class="comment">// 3. Open a file</span>
+api.open({ fileId: file.id })
+
+<span class="comment">// 4. Select a file via native modal</span>
+const { user_action, content } = await api.selectContent()
+<span class="comment">// user_action: 'selected' | 'cancelled'</span>
+<span class="comment">// content: array of { id, name, type, ... }</span></code></pre>
+    </section>
+
+    <!-- Section B: Live file list -->
+    <section>
+      <h2>List &amp; Open</h2>
+      <p id="status">Connecting...</p>
+      <ul id="files"></ul>
+    </section>
+
+    <!-- Section C: Select content via modal -->
+    <section>
+      <h2>Select Content</h2>
+      <p id="select-status">Opens the native Pitcher file picker. Selected files appear below - click to open.</p>
+      <button id="select-btn" disabled>Select File...</button>
+      <ul id="selection-result"></ul>
+    </section>
+
+    <script>
+      async function main() {
+        const status = document.getElementById('status')
+        const fileList = document.getElementById('files')
+
+        // Step 1: Initialize the Pitcher API
+        const api = pitcher.useApi()
+        const env = await api.getEnv()
+
+        // Step 2: Fetch files from the current instance
+        status.textContent = 'Loading files...'
+        const { results: files, count: total } = await api.getFiles({
+          instance_id: env.pitcher.instance.id,
+          page_size: 10
+        })
+
+        // Step 3: Render the list — click any item to open it
+        status.textContent = files.length + ' of ' + total + ' files loaded. Click any file to open it.'
+
+        for (const file of files) {
+          const li = document.createElement('li')
+          li.innerHTML =
+            '<strong>' + (file.name || 'Unnamed') + '</strong>' +
+            '<div class="meta">' + (file.file_type || file.type || '—') + ' &middot; ' + file.id + '</div>'
+          li.onclick = () => api.open({ fileId: file.id })
+          fileList.appendChild(li)
+        }
+
+        // Step 4: Wire up the "Select File" button
+        const selectBtn = document.getElementById('select-btn')
+        const selectStatus = document.getElementById('select-status')
+        const selectionResult = document.getElementById('selection-result')
+        selectBtn.disabled = false
+
+        selectBtn.onclick = async () => {
+          const { user_action, content } = await api.selectContent()
+
+          if (user_action === 'cancelled' || !content?.length) {
+            selectStatus.textContent = 'Selection cancelled.'
+            selectionResult.innerHTML = ''
+            return
+          }
+
+          selectStatus.textContent = content.length + ' file(s) selected. Click any file to open it.'
+          selectionResult.innerHTML = ''
+          for (const item of content) {
+            const name = item.name || (item.file && item.file.name) || '—'
+            const fileId = item.id || (item.file && item.file.id)
+            const page = item.page_index != null ? ' &middot; page: ' + item.page_index : ''
+            const li = document.createElement('li')
+            li.innerHTML =
+              '<strong>' + name + '</strong>' +
+              '<div class="meta">' + (item.type || '—') + ' &middot; ' + fileId + page + '</div>'
+            li.onclick = () => api.open({ fileId })
+            selectionResult.appendChild(li)
+          }
+        }
+      }
+
+      main().catch(err => {
+        document.getElementById('status').textContent = 'Error: ' + err.message
+        console.error(err)
+      })
+    </script>
+  </body>
+</html>
