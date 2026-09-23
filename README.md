@@ -46,6 +46,19 @@ Examples for multimedia and content selection:
 Examples for building apps embedded in Canvas:
 
 - **[Canvas Header Overview](canvas-header-overview/)**: Dashboard with goals, cycle plan, and communication updates. Demonstrates JS API usage, Canvas communication via js api events, and dynamic theming.
+- **[Vite App Example](vite-app-example/)**: Canvas sales dashboard built with Vite + React, dev-synced via watch mode
+
+### UI Framework Demos
+
+Examples showcasing the Pitcher UI Framework (`@pitcher/css`):
+
+- **[Pitcher UI Demo](pitcher-ui-demo/)**: Contact manager built with `@pitcher/css` components — cards, modals, forms, tabs, badges, instance theming
+
+### Integrations
+
+Examples integrating an external API through a hosted server component:
+
+- **[Financial API Populator](Integrations/financial-api-populator/)**: Real-time financial data (Finnhub) via a secure integration server, supporting both DSR (shared links) and Impact (rep) contexts
 
 ### Web File Apps
 
